@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Animal Rescue" />
+  <meta name="theme-color" content="#ff9f4a" />
+  <meta name="description" content="Solve riddles with Detective Whiskers and rescue the animals of Karandas!" />
+  <title>Animal Rescue Adventure 🐾</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===================== TOP BAR ===================== -->
+  <header id="topbar" class="hidden">
+    <button class="navbtn" data-go="map">🗺️ Map</button>
+    <button class="navbtn" data-go="avatar">🧑‍🎨 Avatar</button>
+    <button class="navbtn" data-go="badges">🏅 Badges</button>
+    <div id="rescue-count">0 / 5 rescued</div>
+  </header>
+
+  <main id="app">
+
+    <!-- ===================== TITLE SCREEN ===================== -->
+    <section id="screen-title" class="screen active">
+      <div class="title-art">🐾</div>
+      <h1>Animal Rescue<br />Adventure</h1>
+      <p class="subtitle">The animals of <strong>Karandas</strong> have wandered off!<br />Solve riddles with Detective Whiskers and bring them home. 🐱🔎</p>
+      <div class="team-row" aria-hidden="true">
+        <span title="Dash is super fast">🐇 Dash</span>
+        <span title="Clever is great at riddles">🦊 Clever</span>
+        <span title="Scout loves to climb">🐿️ Scout</span>
+      </div>
+      <button id="btn-start" class="bigbtn">Start the Adventure!</button>
+      <button id="btn-reset" class="linkbtn">Start over from the beginning</button>
+    </section>
+
+    <!-- ===================== AVATAR CREATOR ===================== -->
+    <section id="screen-avatar" class="screen">
+      <h2>Make Your Hero!</h2>
+      <div class="avatar-stage">
+        <div id="avatar-preview"></div>
+      </div>
+
+      <div class="picker">
+        <div class="picker-row">
+          <span class="picker-label">Skin</span>
+          <div class="swatches" data-part="skin"></div>
+        </div>
+        <div class="picker-row">
+          <span class="picker-label">Hair style</span>
+          <div class="chips" data-part="hairStyle"></div>
+        </div>
+        <div class="picker-row">
+          <span class="picker-label">Hair color</span>
+          <div class="swatches" data-part="hairColor"></div>
+        </div>
+        <div class="picker-row">
+          <span class="picker-label">Shirt</span>
+          <div class="swatches" data-part="shirt"></div>
+        </div>
+        <div class="picker-row">
+          <span class="picker-label">Face</span>
+          <div class="chips" data-part="face"></div>
+        </div>
+      </div>
+
+      <button id="btn-avatar-done" class="bigbtn">That's me! Let's go 🐾</button>
+    </section>
+
+    <!-- ===================== GAME / RIDDLE SCREEN ===================== -->
+    <section id="screen-game" class="screen">
+      <div class="park-bg">
+        <div class="sky"></div>
+        <div class="hills"></div>
+        <div class="ground"></div>
+        <div id="game-avatar"></div>
+        <div class="detective">
+          <div class="detective-cat">🐱🔎</div>
+          <div class="detective-name">Detective Whiskers</div>
+        </div>
+      </div>
+
+      <div class="riddle-card">
+        <p id="riddle-progress" class="riddle-progress"></p>
+        <p id="riddle-text">…</p>
+        <div class="answer-row">
+          <input id="answer-input" type="text" placeholder="Type your answer…"
+                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+          <button id="btn-answer" class="bigbtn small">Check!</button>
+        </div>
+        <p id="answer-feedback" class="feedback"></p>
+        <button id="btn-hint" class="linkbtn">🦊 Ask Clever for a hint</button>
+        <p id="hint-text" class="hint"></p>
+      </div>
+    </section>
+
+    <!-- ===================== MAP SCREEN ===================== -->
+    <section id="screen-map" class="screen">
+      <h2>Map of Karandas</h2>
+      <p class="map-help">Solve riddles to light up new places. ✨</p>
+      <div id="map-grid"></div>
+      <button class="bigbtn back-btn" data-go="game">Back to Detective Whiskers 🔎</button>
+    </section>
+
+    <!-- ===================== BADGES SCREEN ===================== -->
+    <section id="screen-badges" class="screen">
+      <h2>My Rescue Badges</h2>
+      <p class="map-help">A sticker for every animal you bring home. 🏅</p>
+      <div id="badge-grid"></div>
+      <button class="bigbtn back-btn" data-go="game">Back to the adventure 🐾</button>
+    </section>
+
+    <!-- ===================== ENDING SCREEN ===================== -->
+    <section id="screen-ending" class="screen">
+      <div class="confetti-layer" id="confetti"></div>
+      <h1>You did it! 🎉</h1>
+      <p class="subtitle">Every animal in Karandas is home and safe. Now everyone plays together in the sunshine!</p>
+      <div id="ending-parade"></div>
+      <div class="team-row">
+        <span>🐇 Dash</span><span>🦊 Clever</span><span>🐿️ Scout</span><span>🐱 Whiskers</span>
+      </div>
+      <button class="bigbtn" data-go="badges">See my badges 🏅</button>
+      <button id="btn-play-again" class="linkbtn">Play again</button>
+    </section>
+
+  </main>
+
+  <!-- ===================== CELEBRATION POPUP ===================== -->
+  <div id="celebrate" class="celebrate hidden">
+    <div class="celebrate-box">
+      <div id="celebrate-emoji" class="celebrate-emoji">🐼</div>
+      <h2 id="celebrate-title">Correct!</h2>
+      <p id="celebrate-text">You rescued the panda!</p>
+      <div id="celebrate-badge" class="badge-pop"></div>
+      <button id="btn-celebrate-next" class="bigbtn">Next clue →</button>
+    </div>
+  </div>
+
+  <script src="riddles.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

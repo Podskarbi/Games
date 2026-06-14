@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#ff9f4a" />
+  <title>Our Games 🎮</title>
+  <style>
+    :root { --ink: #36314a; --orange: #ff9f4a; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0; min-height: 100vh; padding: 32px 16px 48px;
+      font-family: "Baloo 2", "Comic Sans MS", "Trebuchet MS", system-ui, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #aee6ff 0%, #d9f7c9 100%);
+      background-attachment: fixed; text-align: center;
+    }
+    h1 { font-size: clamp(2rem, 8vw, 3rem); margin: 0.2em 0; }
+    p.sub { font-size: 1.2rem; margin: 0 0 28px; }
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px; max-width: 760px; margin: 0 auto;
+    }
+    .game-card {
+      display: block; text-decoration: none; color: inherit;
+      background: #fff; border-radius: 24px; padding: 22px 18px;
+      box-shadow: 0 8px 0 rgba(0,0,0,0.12); transition: transform 0.12s ease;
+    }
+    .game-card:active { transform: translateY(4px); box-shadow: 0 4px 0 rgba(0,0,0,0.12); }
+    .game-card img { width: 96px; height: 96px; border-radius: 22px; }
+    .game-card h2 { margin: 12px 0 4px; font-size: 1.4rem; }
+    .game-card p { margin: 0; font-size: 1rem; opacity: 0.8; }
+    .soon {
+      background: rgba(255,255,255,0.55); border: 3px dashed #b9b3c9;
+      box-shadow: none; color: #6f6a82; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; min-height: 180px;
+    }
+    .soon .big { font-size: 3rem; }
+    footer { margin-top: 36px; font-size: 0.95rem; opacity: 0.7; }
+  </style>
+</head>
+<body>
+  <h1>Our Games 🎮</h1>
+  <p class="sub">Made by Hania &amp; Wojtek 🐾</p>
+
+  <div class="grid">
+    <a class="game-card" href="animal-rescue/">
+      <img src="animal-rescue/icon-512.png" alt="Animal Rescue paw icon" />
+      <h2>Animal Rescue Adventure</h2>
+      <p>Solve riddles and rescue the animals of Karandas!</p>
+    </a>
+
+    <div class="game-card soon">
+      <span class="big">✨</span>
+      <h2>More coming soon</h2>
+      <p>A new game will appear here.</p>
+    </div>
+  </div>
+
+  <footer>No ads · No logins · Safe &amp; kid-friendly</footer>
+</body>
+</html>

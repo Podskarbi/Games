@@ -1,0 +1,255 @@
+/* ============================================================
+   Animal Rescue Adventure — styles
+   Bright, rounded, big tap targets for little hands on an iPad.
+   ============================================================ */
+
+:root {
+  --sky: #8fd3ff;
+  --grass: #8ddf6e;
+  --sun: #ffd93b;
+  --pink: #ff8fb1;
+  --purple: #b58cff;
+  --orange: #ff9f4a;
+  --cream: #fff7e6;
+  --ink: #36314a;
+  --card: #ffffff;
+  --shadow: 0 8px 0 rgba(0,0,0,0.12);
+  --radius: 22px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: "Baloo 2", "Comic Sans MS", "Marker Felt", "Trebuchet MS", system-ui, sans-serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, #aee6ff 0%, #d9f7c9 100%);
+  background-attachment: fixed;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#app {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 12px 16px 32px;
+}
+
+h1 { font-size: clamp(2rem, 8vw, 3.2rem); line-height: 1.05; margin: 0.2em 0; text-align: center; }
+h2 { font-size: clamp(1.5rem, 6vw, 2.2rem); text-align: center; margin: 0.3em 0 0.5em; }
+
+.hidden { display: none !important; }
+
+/* ---------- Screens ---------- */
+.screen { display: none; animation: pop 0.35s ease; }
+.screen.active { display: block; }
+@keyframes pop { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+/* ---------- Buttons ---------- */
+.bigbtn {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  margin: 18px auto 8px;
+  padding: 18px 24px;
+  font-size: 1.4rem;
+  font-family: inherit;
+  font-weight: 800;
+  color: #fff;
+  background: var(--orange);
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform 0.08s ease, filter 0.1s ease;
+}
+.bigbtn:active { transform: translateY(4px); box-shadow: 0 4px 0 rgba(0,0,0,0.12); }
+.bigbtn:hover { filter: brightness(1.05); }
+.bigbtn.small { width: auto; margin: 0; padding: 14px 20px; font-size: 1.2rem; }
+.bigbtn.back-btn { background: var(--purple); }
+
+.linkbtn {
+  display: block;
+  margin: 10px auto;
+  background: none;
+  border: none;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 1.05rem;
+  text-decoration: underline;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+/* ---------- Top bar ---------- */
+#topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(6px);
+  border-radius: 0 0 18px 18px;
+}
+.navbtn {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 14px;
+  background: var(--sun);
+  color: var(--ink);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+  cursor: pointer;
+}
+.navbtn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.12); }
+#rescue-count {
+  margin-left: auto;
+  font-weight: 800;
+  background: var(--grass);
+  color: #1f5e1f;
+  padding: 8px 14px;
+  border-radius: 14px;
+}
+
+/* ---------- Title screen ---------- */
+.title-art { font-size: 5rem; text-align: center; animation: bob 2.4s ease-in-out infinite; }
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+.subtitle { text-align: center; font-size: 1.25rem; max-width: 520px; margin: 0.4em auto 1em; }
+.team-row {
+  display: flex; justify-content: center; flex-wrap: wrap; gap: 14px;
+  font-size: 1.2rem; font-weight: 700; margin: 12px 0;
+}
+.team-row span { background: #fff; padding: 8px 14px; border-radius: 16px; box-shadow: var(--shadow); }
+
+/* ---------- Avatar creator ---------- */
+.avatar-stage {
+  display: flex; justify-content: center; margin: 10px 0 18px;
+}
+#avatar-preview, #game-avatar, .ending-avatar {
+  width: 180px; height: 220px;
+}
+#game-avatar { width: 120px; height: 150px; }
+.picker { max-width: 520px; margin: 0 auto; }
+.picker-row {
+  display: flex; align-items: center; gap: 12px; margin: 12px 0;
+  background: #fff; padding: 12px 14px; border-radius: 16px; box-shadow: var(--shadow);
+}
+.picker-label { font-weight: 800; width: 92px; flex: none; }
+.swatches, .chips { display: flex; gap: 10px; flex-wrap: wrap; }
+.swatch {
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 4px solid #fff; box-shadow: 0 0 0 2px rgba(0,0,0,0.12);
+  cursor: pointer; transition: transform 0.1s ease;
+}
+.swatch.selected { transform: scale(1.18); box-shadow: 0 0 0 4px var(--ink); }
+.chip {
+  font-family: inherit; font-size: 1.1rem; font-weight: 700;
+  padding: 8px 16px; border-radius: 14px; border: none;
+  background: #eee; cursor: pointer;
+}
+.chip.selected { background: var(--purple); color: #fff; }
+
+/* ---------- Game / riddle screen ---------- */
+.park-bg {
+  position: relative; height: 230px; border-radius: var(--radius);
+  overflow: hidden; box-shadow: var(--shadow); margin-bottom: 16px;
+}
+.park-bg .sky { position: absolute; inset: 0; background: linear-gradient(180deg, var(--sky), #cdeeff); }
+.park-bg .sky::after {
+  content: ""; position: absolute; top: 18px; right: 26px;
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--sun); box-shadow: 0 0 40px 10px rgba(255,217,59,0.7);
+}
+.park-bg .hills {
+  position: absolute; bottom: 60px; left: -10%; right: -10%; height: 120px;
+  background: radial-gradient(120% 100% at 50% 100%, #9be07a 60%, transparent 61%);
+}
+.park-bg .ground { position: absolute; bottom: 0; left: 0; right: 0; height: 70px; background: var(--grass); }
+#game-avatar { position: absolute; bottom: 8px; left: 20px; }
+.detective { position: absolute; bottom: 8px; right: 16px; text-align: center; }
+.detective-cat { font-size: 3rem; animation: bob 2s ease-in-out infinite; }
+.detective-name {
+  background: #fff; border-radius: 12px; padding: 2px 10px;
+  font-weight: 800; font-size: 0.95rem; box-shadow: var(--shadow); margin-top: 2px;
+}
+
+.riddle-card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 20px; box-shadow: var(--shadow);
+}
+.riddle-progress { font-weight: 800; color: var(--purple); margin: 0 0 6px; }
+#riddle-text { font-size: 1.35rem; white-space: pre-line; line-height: 1.4; margin: 0 0 14px; }
+.answer-row { display: flex; gap: 10px; flex-wrap: wrap; }
+#answer-input {
+  flex: 1; min-width: 160px; font-family: inherit; font-size: 1.3rem;
+  padding: 14px 16px; border: 3px solid var(--purple); border-radius: 16px; outline: none;
+}
+#answer-input:focus { border-color: var(--orange); }
+.feedback { font-size: 1.2rem; font-weight: 800; min-height: 1.4em; margin: 10px 0 0; }
+.feedback.try { color: var(--pink); }
+.feedback.good { color: #1f9e3a; }
+.hint {
+  margin: 8px 0 0; font-size: 1.1rem; background: #fff4cc;
+  border-radius: 14px; padding: 0 12px; max-height: 0; overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+.hint.show { padding: 12px; max-height: 200px; }
+
+/* ---------- Map ---------- */
+.map-help { text-align: center; font-size: 1.15rem; margin-top: 0; }
+#map-grid, #badge-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px; max-width: 620px; margin: 0 auto 10px;
+}
+.map-spot, .badge-card {
+  background: #fff; border-radius: 18px; padding: 16px 10px; text-align: center;
+  box-shadow: var(--shadow); transition: transform 0.15s ease;
+}
+.map-spot .spot-emoji, .badge-card .badge-emoji { font-size: 3rem; display: block; }
+.map-spot .spot-name, .badge-card .badge-name { font-weight: 800; margin-top: 6px; }
+.map-spot.locked { filter: grayscale(1) brightness(0.85); opacity: 0.55; }
+.map-spot.locked .spot-emoji { content: "❓"; }
+.map-spot.found { background: #eaffe0; }
+.map-spot.found .spot-status { color: #1f9e3a; font-weight: 800; }
+.map-spot.locked .spot-status { color: #999; }
+.badge-card.empty { filter: grayscale(1); opacity: 0.5; }
+
+/* ---------- Celebration popup ---------- */
+.celebrate {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.45); padding: 20px;
+}
+.celebrate-box {
+  background: var(--cream); border-radius: 28px; padding: 28px 24px;
+  text-align: center; max-width: 420px; width: 100%;
+  box-shadow: 0 20px 0 rgba(0,0,0,0.2); animation: pop 0.4s ease;
+}
+.celebrate-emoji { font-size: 5.5rem; animation: spinpop 0.6s ease; }
+@keyframes spinpop { from { transform: scale(0) rotate(-30deg); } to { transform: scale(1) rotate(0); } }
+.badge-pop {
+  display: inline-block; background: var(--sun); color: var(--ink);
+  font-weight: 800; padding: 8px 16px; border-radius: 14px; margin: 10px 0;
+  box-shadow: var(--shadow);
+}
+
+/* ---------- Ending ---------- */
+#ending-parade { font-size: 3.5rem; text-align: center; margin: 16px 0; line-height: 1.6; }
+.confetti-layer { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+.confetti {
+  position: absolute; top: -20px; width: 12px; height: 18px; border-radius: 3px;
+  animation: fall linear forwards;
+}
+@keyframes fall {
+  to { transform: translateY(110vh) rotate(720deg); opacity: 0.9; }
+}
