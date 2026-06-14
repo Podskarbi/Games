@@ -78,6 +78,7 @@
     const map = { title: "title", how: "how", gear: "gear", level: "level", over: "over" };
     if (map[next]) overlays[map[next]].classList.add("active");
     playControls.classList.toggle("hidden", next !== S.PLAY);
+    document.getElementById("control-hint").classList.toggle("hidden", next !== S.PLAY);
     if (next === S.TITLE) {
       document.getElementById("hi-title").textContent = save.best ? "Best score: " + save.best : "";
     }

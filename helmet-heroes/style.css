@@ -54,6 +54,17 @@ a.ctrl-btn { text-decoration: none; display: inline-flex; align-items: center; j
 }
 .ctrl-btn.small { padding: 14px 16px; }
 
+/* ---------- Constant control hint during play ---------- */
+#control-hint {
+  position: absolute; top: 54px; left: 50%; transform: translateX(-50%); z-index: 5;
+  max-width: 92%; text-align: center; white-space: nowrap;
+  font-family: inherit; font-weight: 800; font-size: 0.95rem; color: #fff;
+  background: rgba(15, 20, 45, 0.55); border-radius: 999px; padding: 7px 16px;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+@media (max-width: 480px) { #control-hint { white-space: normal; font-size: 0.82rem; } }
+
 /* ---------- Overlays (menus) ---------- */
 .overlay {
   position: absolute; inset: 0; z-index: 10;
