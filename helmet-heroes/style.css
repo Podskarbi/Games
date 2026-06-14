@@ -44,6 +44,8 @@ html, body {
   padding: 14px 18px; box-shadow: var(--shadow); cursor: pointer;
 }
 .ctrl-btn:active { transform: translateY(3px); box-shadow: 0 6px 0 rgba(0,0,0,0.28); }
+a.ctrl-btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+.exit-ctrl { background: #ff5a3c; }
 .ctrl-btn.off { background: var(--red); }
 .ctrl-btn.small { padding: 14px 16px; }
 
