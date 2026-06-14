@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Helmet Heroes" />
+  <meta name="theme-color" content="#3a7bff" />
+  <meta name="description" content="Auto-skate trick game where safe skating is how you win. Helmet on, time your tricks, beat your high score!" />
+  <title>Helmet Heroes — Skate Park 🛹</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game-wrap">
+    <canvas id="game"></canvas>
+
+    <!-- Floating play controls (over the canvas) -->
+    <div id="play-controls" class="hidden">
+      <button id="helmet-toggle" class="ctrl-btn">🪖 Helmet: ON</button>
+      <button id="pause-btn" class="ctrl-btn small">⏸</button>
+    </div>
+
+    <!-- ===================== TITLE ===================== -->
+    <section id="screen-title" class="overlay active">
+      <div class="logo">🛹</div>
+      <h1>Helmet Heroes</h1>
+      <p class="tag">Skate Park</p>
+      <p class="sub">Roll, time your tricks, and rack up points.<br /><strong>Wearing your helmet is how you win!</strong></p>
+      <button id="btn-play" class="bigbtn">Skate! 🛹</button>
+      <button id="btn-how" class="linkbtn">How to play</button>
+      <p id="hi-title" class="hiscore"></p>
+    </section>
+
+    <!-- ===================== HOW TO PLAY ===================== -->
+    <section id="screen-how" class="overlay">
+      <h2>How to Play</h2>
+      <ul class="how-list">
+        <li>🛹 You skate forward by yourself.</li>
+        <li>👆 <strong>Tap</strong> (or press <strong>Space</strong>) when the shrinking ring lines up with the glowing target to land a trick.</li>
+        <li>🪖 <strong>Helmet ON</strong>: clean tricks give points <em>and</em> stamina. A missed trick is just a small wobble.</li>
+        <li>😬 <strong>Helmet OFF</strong>: a missed trick is a big wipeout — and a police skater starts chasing you!</li>
+        <li>🔋 Keep the <strong>stamina bar</strong> out of the red. Combos build a multiplier and a "second wind."</li>
+      </ul>
+      <button class="bigbtn" data-go="title">Got it!</button>
+    </section>
+
+    <!-- ===================== GEAR UP ===================== -->
+    <section id="screen-gear" class="overlay">
+      <h2>Gear Up!</h2>
+      <div class="gear-preview"><canvas id="gear-canvas" width="220" height="200"></canvas></div>
+      <div class="gear-pick">
+        <div class="gear-label">🪖 Helmet</div>
+        <div id="helmet-row" class="gear-row"></div>
+      </div>
+      <div class="gear-pick">
+        <div class="gear-label">🛹 Board</div>
+        <div id="board-row" class="gear-row"></div>
+      </div>
+      <button id="btn-start-run" class="bigbtn">Start Skating! 🤙</button>
+    </section>
+
+    <!-- ===================== LEVEL UP / FACT CARD ===================== -->
+    <section id="screen-level" class="overlay">
+      <div class="level-badge" id="level-badge">Level 2</div>
+      <h2 id="level-title">Steeper Ramps!</h2>
+      <p class="fact" id="level-fact">…</p>
+      <button id="btn-level-go" class="bigbtn">Keep Skating! 🛹</button>
+    </section>
+
+    <!-- ===================== GAME OVER ===================== -->
+    <section id="screen-over" class="overlay">
+      <div id="over-emoji" class="logo">🛋️</div>
+      <h1 id="over-title">GROUNDED!</h1>
+      <p id="over-text" class="sub">The police skater caught you. Keep your helmet on next time!</p>
+      <div class="score-box">
+        <div>Score: <strong id="final-score">0</strong></div>
+        <div id="final-best" class="best"></div>
+      </div>
+      <p id="unlock-note" class="unlock"></p>
+      <button id="btn-again" class="bigbtn">Skate Again 🛹</button>
+      <button class="linkbtn" data-go="gear">Change gear</button>
+    </section>
+  </div>
+
+  <script src="tricks.js"></script>
+  <script src="gear.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
