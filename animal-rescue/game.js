@@ -218,6 +218,121 @@
     return choices;
   }
 
+  /* ============================================================
+     ANIMATED CITY SCENE + DETECTIVE WHISKERS (drawn art)
+     ============================================================ */
+  function buildCityArt() {
+    const W = 800, H = 240, horizon = 176, roadY = 206;
+    // far skyline
+    let far = "", x = 0, i = 0;
+    const farCols = ["#c4d9ef", "#cfe1f3"];
+    while (x < W) {
+      const w = 46 + (i * 37) % 44, h = 50 + (i * 53) % 70;
+      far += `<rect x="${x}" y="${horizon - h}" width="${w}" height="${h}" rx="3" fill="${farCols[i % 2]}"/>`;
+      x += w + 7; i++;
+    }
+    // mid buildings with lit windows
+    let mid = "", bx = 14, bi = 0;
+    const cols = ["#eab0c3", "#a9c8f0", "#f4c98a", "#bfe3a8", "#d3b6ef", "#9fd8d0"];
+    while (bx < W - 30) {
+      const bw = 78 + (bi * 29) % 46, bh = 78 + (bi * 61) % 62, by = horizon - bh, col = cols[bi % cols.length];
+      mid += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="6" fill="${col}"/>`;
+      mid += `<rect x="${bx}" y="${by}" width="${bw}" height="12" rx="6" fill="rgba(0,0,0,0.10)"/>`;
+      for (let wy = by + 22; wy < horizon - 14; wy += 26)
+        for (let wx = bx + 12; wx < bx + bw - 14; wx += 24)
+          mid += `<rect x="${wx}" y="${wy}" width="13" height="16" rx="2" fill="${(wx + wy) % 3 === 0 ? "#fff4b8" : "#dcecff"}"/>`;
+      bx += bw + 16; bi++;
+    }
+    // trees + lampposts along the sidewalk
+    let fg = "";
+    for (const tx of [70, 250, 430, 610, 770]) fg += sceneTree(tx, horizon + 6, 1);
+    for (const lx of [160, 360, 560, 720]) fg += lamp(lx, horizon + 4);
+    // sun rays
+    let rays = "";
+    for (let a = 0; a < 12; a++) rays += `<rect x="697" y="14" width="6" height="16" rx="3" fill="#ffe06b" transform="rotate(${a * 30} 700 46)"/>`;
+
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="csky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#79c2ff"/><stop offset="0.65" stop-color="#bce6ff"/><stop offset="1" stop-color="#e6f6ff"/>
+      </linearGradient></defs>
+      <rect width="${W}" height="${H}" fill="url(#csky)"/>
+      <g class="cs-rays">${rays}</g>
+      <circle cx="700" cy="46" r="28" fill="#ffe06b"/>
+      ${far}
+      <rect x="0" y="${horizon - 2}" width="${W}" height="14" fill="#cdeec4"/>
+      ${mid}
+      <rect x="0" y="${horizon}" width="${W}" height="${H - horizon}" fill="#8ddf6e"/>
+      <rect x="0" y="${roadY}" width="${W}" height="${H - roadY}" fill="#9aa4b2"/>
+      <rect x="0" y="${roadY}" width="${W}" height="4" fill="#838d9c"/>
+      ${dashLine(roadY + 20, W)}
+      ${fg}
+    </svg>`;
+  }
+  function sceneTree(x, y, s) {
+    return `<g transform="translate(${x},${y}) scale(${s})">
+      <rect x="-5" y="-26" width="10" height="28" rx="4" fill="#8a5a35"/>
+      <circle cx="0" cy="-40" r="22" fill="#5fb85a"/>
+      <circle cx="-16" cy="-30" r="15" fill="#6cc466"/>
+      <circle cx="16" cy="-30" r="15" fill="#54ad50"/></g>`;
+  }
+  function lamp(x, y) {
+    return `<g transform="translate(${x},${y})">
+      <rect x="-2.5" y="-44" width="5" height="46" rx="2" fill="#5a6172"/>
+      <circle cx="0" cy="-48" r="6" fill="#ffe78a"/></g>`;
+  }
+  function dashLine(y, W) {
+    let s = "";
+    for (let x = 10; x < W; x += 46) s += `<rect x="${x}" y="${y}" width="24" height="5" rx="2.5" fill="#ffd93b"/>`;
+    return s;
+  }
+
+  // Detective Whiskers — a drawn cat detective with a deerstalker hat & magnifier.
+  function buildDetective() {
+    return `<svg viewBox="0 0 120 120" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="60" cy="114" rx="30" ry="5" fill="rgba(0,0,0,0.12)"/>
+      <!-- coat/body -->
+      <path d="M40 112 Q40 78 60 78 Q80 78 80 112 Z" fill="#b9742e"/>
+      <path d="M60 80 L60 110" stroke="#9c5f22" stroke-width="2"/>
+      <!-- tail -->
+      <path class="cat-tail" d="M80 104 Q104 100 100 78" stroke="#9a9a9a" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <!-- head -->
+      <circle cx="60" cy="54" r="26" fill="#a9a9a9"/>
+      <polygon points="40,38 36,18 56,32" fill="#a9a9a9"/>
+      <polygon points="80,38 84,18 64,32" fill="#a9a9a9"/>
+      <polygon points="41,34 39,23 51,31" fill="#f4b8c4"/>
+      <polygon points="79,34 81,23 69,31" fill="#f4b8c4"/>
+      <!-- deerstalker hat -->
+      <path d="M34 40 Q60 12 86 40 Q86 30 60 26 Q34 30 34 40 Z" fill="#7a5230"/>
+      <ellipse cx="60" cy="40" rx="28" ry="7" fill="#5f3f22"/>
+      <circle cx="60" cy="24" r="5" fill="#8a5e38"/>
+      <!-- face -->
+      <circle cx="51" cy="54" r="4" fill="#2a2a2a"/>
+      <circle cx="69" cy="54" r="4" fill="#2a2a2a"/>
+      <circle cx="52.2" cy="52.6" r="1.3" fill="#fff"/>
+      <circle cx="70.2" cy="52.6" r="1.3" fill="#fff"/>
+      <path d="M56 62 Q60 66 64 62" stroke="#3a2a2a" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <polygon points="57,59 63,59 60,63" fill="#f08a9a"/>
+      <g stroke="#cfcfcf" stroke-width="1.5">
+        <line x1="40" y1="58" x2="22" y2="55"/><line x1="40" y1="62" x2="23" y2="64"/>
+        <line x1="80" y1="58" x2="98" y2="55"/><line x1="80" y1="62" x2="97" y2="64"/>
+      </g>
+      <!-- magnifying glass -->
+      <g class="cat-glass">
+        <line x1="84" y1="92" x2="98" y2="106" stroke="#7a5230" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="80" cy="86" r="13" fill="rgba(180,225,255,0.55)" stroke="#5a6172" stroke-width="4"/>
+      </g>
+    </svg>`;
+  }
+
+  function updateLocationStrip() {
+    const el = document.getElementById("loc-now");
+    if (!el) return;
+    const total = riddles.length, done = rescuedCount();
+    if (done === 0) el.textContent = "Detective Whiskers picks up the first trail…";
+    else if (done >= total) el.textContent = "Every animal is home — hooray!";
+    else el.textContent = `Searching Karandas — ${done} of ${total} animals rescued`;
+  }
+
   function renderRiddle() {
     const r = currentRiddle();
     const fb = document.getElementById("answer-feedback");
@@ -225,6 +340,7 @@
     const optionsEl = document.getElementById("answer-options");
 
     renderAvatarInto(document.getElementById("game-avatar"));
+    updateLocationStrip();
     fb.textContent = "";
     fb.className = "feedback";
     hint.textContent = "";
@@ -294,19 +410,125 @@
   /* ============================================================
      MAP
      ============================================================ */
-  function renderMap() {
-    const grid = document.getElementById("map-grid");
-    grid.innerHTML = "";
-    riddles.forEach((r) => {
-      const done = isSolved(r.id);
-      const spot = document.createElement("div");
-      spot.className = "map-spot " + (done ? "found" : "locked");
-      spot.innerHTML = `
-        <span class="spot-emoji">${done ? r.emoji : "❓"}</span>
-        <div class="spot-name">${done ? cap(r.location) : "???"}</div>
-        <div class="spot-status">${done ? "Rescued!" : "Locked"}</div>`;
-      grid.appendChild(spot);
+  // Where each location sits on the city map + its landmark emoji.
+  const LOC_LAYOUT = {
+    park:      { x: 150, y: 120, emoji: "🌳" },
+    bakery:    { x: 365, y: 95,  emoji: "🥐" },
+    fountain:  { x: 590, y: 120, emoji: "⛲" },
+    library:   { x: 690, y: 300, emoji: "📚" },
+    market:    { x: 470, y: 285, emoji: "🎪" },
+    treehouse: { x: 225, y: 300, emoji: "🛖" },
+    garden:    { x: 360, y: 455, emoji: "🌷" },
+    pond:      { x: 600, y: 455, emoji: "🪷" },
+    forest:    { x: 130, y: 470, emoji: "🌲" },
+    hill:      { x: 690, y: 500, emoji: "⛰️" },
+  };
+  const ROAD_EDGES = [
+    ["park", "bakery"], ["bakery", "fountain"], ["fountain", "library"],
+    ["park", "treehouse"], ["bakery", "market"], ["fountain", "market"],
+    ["treehouse", "market"], ["treehouse", "forest"], ["market", "garden"],
+    ["market", "library"], ["garden", "pond"], ["pond", "library"],
+    ["garden", "forest"], ["pond", "hill"], ["library", "hill"],
+  ];
+  const DECO_TREES = [
+    [60, 220, 1], [280, 175, 0.8], [500, 200, 0.9], [760, 180, 0.8],
+    [70, 360, 0.9], [430, 380, 0.8], [770, 400, 0.9], [300, 540, 0.85],
+    [520, 560, 0.8], [180, 560, 0.7], [660, 200, 0.7],
+  ];
+  const DECO_HOUSES = [
+    [480, 150, "#f4b3c4"], [250, 210, "#a9c8f0"], [560, 350, "#f4c98a"],
+    [150, 400, "#bfe3a8"], [430, 520, "#d6b8f0"],
+  ];
+
+  function mapTree(x, y, s) {
+    return `<g transform="translate(${x},${y}) scale(${s})">
+      <ellipse cx="0" cy="6" rx="20" ry="6" fill="rgba(0,0,0,0.08)"/>
+      <rect x="-4" y="-16" width="8" height="20" rx="3" fill="#8a5a35"/>
+      <circle cx="0" cy="-30" r="20" fill="#5fb85a"/>
+      <circle cx="-14" cy="-22" r="14" fill="#6cc466"/>
+      <circle cx="14" cy="-22" r="14" fill="#54ad50"/></g>`;
+  }
+  function mapHouse(x, y, color) {
+    return `<g transform="translate(${x},${y})">
+      <ellipse cx="0" cy="20" rx="26" ry="6" fill="rgba(0,0,0,0.08)"/>
+      <rect x="-22" y="-6" width="44" height="26" rx="3" fill="${color}"/>
+      <polygon points="-26,-6 0,-26 26,-6" fill="#c96a52"/>
+      <rect x="-6" y="4" width="12" height="16" rx="2" fill="#7a5a3a"/>
+      <rect x="-18" y="0" width="9" height="9" rx="1.5" fill="#fff3b0"/>
+      <rect x="9" y="0" width="9" height="9" rx="1.5" fill="#fff3b0"/></g>`;
+  }
+
+  function drawMapNode(L, r, done, isCur) {
+    const w = 94, h = 78, x0 = L.x - w / 2, y0 = L.y - h / 2 - 6;
+    if (done) {
+      return `<g>
+        <rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="15" fill="#ffffff" stroke="#7ec77a" stroke-width="3"/>
+        <rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="15" fill="#eafce3" opacity="0.6"/>
+        <text x="${L.x - 6}" y="${L.y + 4}" font-size="40" text-anchor="middle">${L.emoji}</text>
+        <text class="map-bounce" x="${L.x + 30}" y="${L.y - 14}" font-size="28" text-anchor="middle">${r.emoji}</text>
+        <text x="${L.x}" y="${y0 + h + 17}" font-size="15" font-weight="800" text-anchor="middle" fill="#2c6e2c">${cap(L_name(r))}</text>
+        <circle cx="${x0 + 16}" cy="${y0 + 16}" r="11" fill="#2bbe4e"/>
+        <text x="${x0 + 16}" y="${y0 + 21}" font-size="15" fill="#fff" text-anchor="middle" font-weight="800">✓</text>
+      </g>`;
+    }
+    if (isCur) {
+      return `<g>
+        <circle class="map-pulse" cx="${L.x}" cy="${L.y - 6}" r="40" fill="#ffd93b"/>
+        <rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="15" fill="#fffdf2" stroke="#ffb02e" stroke-width="4"/>
+        <text x="${L.x}" y="${L.y + 8}" font-size="40" text-anchor="middle">🔎</text>
+        <text x="${L.x}" y="${y0 + h + 17}" font-size="14" font-weight="800" text-anchor="middle" fill="#c77b00">Searching…</text>
+      </g>`;
+    }
+    return `<g opacity="0.92">
+      <rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="15" fill="#d9d4cb" stroke="#b9b3a8" stroke-width="3"/>
+      <text x="${L.x}" y="${L.y + 14}" font-size="42" text-anchor="middle" fill="#9a948a" font-weight="800">?</text>
+    </g>`;
+  }
+
+  // Show the place name only once it's rescued (don't spoil the riddle).
+  function L_name(r) { return r.location; }
+
+  function buildCityMap() {
+    let roads = "", roadsDash = "";
+    ROAD_EDGES.forEach(([a, b]) => {
+      const A = LOC_LAYOUT[a], B = LOC_LAYOUT[b];
+      if (!A || !B) return;
+      roads += `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" stroke="#c7b79a" stroke-width="18" stroke-linecap="round"/>`;
+      roadsDash += `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" stroke="#f6ecd4" stroke-width="3.5" stroke-dasharray="11 13" stroke-linecap="round"/>`;
     });
+    let deco = "";
+    DECO_HOUSES.forEach(([x, y, c]) => { deco += mapHouse(x, y, c); });
+    DECO_TREES.forEach(([x, y, s]) => { deco += mapTree(x, y, s); });
+
+    const cur = currentRiddle();
+    let nodes = "";
+    riddles.forEach((r) => {
+      const L = LOC_LAYOUT[r.location];
+      if (!L) return;
+      nodes += drawMapNode(L, r, isSolved(r.id), cur && cur.id === r.id);
+    });
+
+    return `<svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#aee68a"/><stop offset="1" stop-color="#8ed46b"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="600" fill="url(#grass)"/>
+      <ellipse cx="200" cy="200" rx="150" ry="90" fill="#9bdd78" opacity="0.5"/>
+      <ellipse cx="600" cy="380" rx="170" ry="100" fill="#9bdd78" opacity="0.45"/>
+      <ellipse cx="420" cy="540" rx="160" ry="70" fill="#9bdd78" opacity="0.4"/>
+      <path d="M -20 250 Q 150 300 250 400 T 520 540 L 540 600 L -20 600 Z" fill="#7fc8e8" opacity="0.55"/>
+      <ellipse cx="600" cy="455" rx="58" ry="30" fill="#7fc8e8"/>
+      <ellipse cx="600" cy="455" rx="58" ry="30" fill="none" stroke="#bfe9f6" stroke-width="3"/>
+      ${roads}${roadsDash}
+      ${deco}
+      ${nodes}
+    </svg>`;
+  }
+
+  function renderMap() {
+    document.getElementById("city-map").innerHTML = buildCityMap();
   }
 
   /* ============================================================
@@ -397,6 +619,8 @@
   /* ---------- Start where the player left off ---------- */
   function boot() {
     renderAvatarInto(document.getElementById("avatar-preview"), true);
+    document.getElementById("city-art").innerHTML = buildCityArt();
+    document.getElementById("detective-art").innerHTML = buildDetective();
     if (!state.started) show("title");
     else if (allDone()) show("ending");
     else show("game");

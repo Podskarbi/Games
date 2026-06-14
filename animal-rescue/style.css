@@ -159,29 +159,60 @@ h2 { font-size: clamp(1.5rem, 6vw, 2.2rem); text-align: center; margin: 0.3em 0 
 }
 .chip.selected { background: var(--purple); color: #fff; }
 
-/* ---------- Game / riddle screen ---------- */
-.park-bg {
-  position: relative; height: 230px; border-radius: var(--radius);
-  overflow: hidden; box-shadow: var(--shadow); margin-bottom: 16px;
+/* ---------- Game / riddle screen: animated city scene ---------- */
+.city-scene {
+  position: relative; height: clamp(220px, 34vw, 280px); border-radius: var(--radius);
+  overflow: hidden; box-shadow: var(--shadow); margin-bottom: 14px;
+  background: #bfe6ff;
 }
-.park-bg .sky { position: absolute; inset: 0; background: linear-gradient(180deg, var(--sky), #cdeeff); }
-.park-bg .sky::after {
-  content: ""; position: absolute; top: 18px; right: 26px;
-  width: 64px; height: 64px; border-radius: 50%;
-  background: var(--sun); box-shadow: 0 0 40px 10px rgba(255,217,59,0.7);
+.city-art { position: absolute; inset: 0; }
+.city-art svg { display: block; width: 100%; height: 100%; }
+
+/* drifting clouds */
+.cloud {
+  position: absolute; width: 70px; height: 24px; background: #fff; border-radius: 20px;
+  opacity: 0.92; box-shadow: 18px 6px 0 -4px #fff, -18px 6px 0 -6px #fff;
+  filter: drop-shadow(0 4px 4px rgba(0,0,0,0.06));
 }
-.park-bg .hills {
-  position: absolute; bottom: 60px; left: -10%; right: -10%; height: 120px;
-  background: radial-gradient(120% 100% at 50% 100%, #9be07a 60%, transparent 61%);
+.cloud-a { top: 18%; left: -90px; animation: drift 26s linear infinite; }
+.cloud-b { top: 30%; left: -120px; transform: scale(0.7); animation: drift 36s linear infinite 6s; }
+.cloud-c { top: 10%; left: -110px; transform: scale(0.85); animation: drift 44s linear infinite 14s; }
+@keyframes drift { to { left: 115%; } }
+
+/* flying birds */
+.bird {
+  position: absolute; color: #4a4a5a; font-size: 16px; letter-spacing: -3px; opacity: 0.7;
 }
-.park-bg .ground { position: absolute; bottom: 0; left: 0; right: 0; height: 70px; background: var(--grass); }
-#game-avatar { position: absolute; bottom: 8px; left: 20px; }
-.detective { position: absolute; bottom: 8px; right: 16px; text-align: center; }
-.detective-cat { font-size: 3rem; animation: bob 2s ease-in-out infinite; }
+.bird-a { top: 22%; left: -40px; animation: fly 18s linear infinite, flap 0.5s ease-in-out infinite; }
+.bird-b { top: 16%; left: -60px; font-size: 12px; animation: fly 24s linear infinite 8s, flap 0.6s ease-in-out infinite; }
+@keyframes fly { to { left: 110%; } }
+@keyframes flap { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+/* sun rays rotation (group inside the SVG) */
+.cs-rays { animation: spin 60s linear infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* characters */
+.cs-avatar { position: absolute; bottom: 4px; left: 6%; width: 92px; height: 116px; animation: bob 2.6s ease-in-out infinite; }
+.cs-detective { position: absolute; bottom: 6px; right: 6%; text-align: center; }
+.detective-art { width: 92px; height: 96px; margin: 0 auto; animation: bob 2.2s ease-in-out infinite; }
 .detective-name {
-  background: #fff; border-radius: 12px; padding: 2px 10px;
-  font-weight: 800; font-size: 0.95rem; box-shadow: var(--shadow); margin-top: 2px;
+  background: #fff; border-radius: 12px; padding: 2px 10px; display: inline-block;
+  font-weight: 800; font-size: 0.92rem; box-shadow: var(--shadow); margin-top: -2px;
 }
+
+.cat-tail { animation: tailwag 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: bottom left; }
+@keyframes tailwag { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(8deg); } }
+.cat-glass { animation: magnify 3s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes magnify { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-4px,-3px); } }
+
+/* current-location strip */
+.location-strip {
+  display: flex; align-items: center; gap: 8px; justify-content: center;
+  background: #fff; border-radius: 14px; padding: 9px 14px; margin: 0 auto 14px;
+  max-width: 520px; box-shadow: var(--shadow); font-weight: 800; color: var(--ink);
+}
+.location-strip .loc-pin { font-size: 1.2rem; animation: bob 1.6s ease-in-out infinite; }
 
 .riddle-card {
   background: var(--card); border-radius: var(--radius);
@@ -217,23 +248,30 @@ h2 { font-size: clamp(1.5rem, 6vw, 2.2rem); text-align: center; margin: 0.3em 0 
 }
 .hint.show { padding: 12px; max-height: 200px; }
 
-/* ---------- Map ---------- */
+/* ---------- Map: illustrated city of Karandas ---------- */
 .map-help { text-align: center; font-size: 1.15rem; margin-top: 0; }
-#map-grid, #badge-grid {
+.city-map {
+  max-width: 680px; margin: 0 auto 12px; border-radius: var(--radius);
+  overflow: hidden; box-shadow: var(--shadow); background: #cdeaff;
+}
+.city-map svg { display: block; width: 100%; height: auto; }
+/* pulsing "searching here" ring inside the map SVG */
+.map-pulse { animation: pulse 1.7s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes pulse { 0%,100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 0.15; transform: scale(1.6); } }
+.map-bounce { animation: mbounce 2s ease-in-out infinite; transform-box: fill-box; transform-origin: center bottom; }
+@keyframes mbounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+/* ---------- Badges (still a grid) ---------- */
+#badge-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 14px; max-width: 620px; margin: 0 auto 10px;
 }
-.map-spot, .badge-card {
+.badge-card {
   background: #fff; border-radius: 18px; padding: 16px 10px; text-align: center;
   box-shadow: var(--shadow); transition: transform 0.15s ease;
 }
-.map-spot .spot-emoji, .badge-card .badge-emoji { font-size: 3rem; display: block; }
-.map-spot .spot-name, .badge-card .badge-name { font-weight: 800; margin-top: 6px; }
-.map-spot.locked { filter: grayscale(1) brightness(0.85); opacity: 0.55; }
-.map-spot.locked .spot-emoji { content: "❓"; }
-.map-spot.found { background: #eaffe0; }
-.map-spot.found .spot-status { color: #1f9e3a; font-weight: 800; }
-.map-spot.locked .spot-status { color: #999; }
+.badge-card .badge-emoji { font-size: 3rem; display: block; }
+.badge-card .badge-name { font-weight: 800; margin-top: 6px; }
 .badge-card.empty { filter: grayscale(1); opacity: 0.5; }
 
 /* ---------- Celebration popup ---------- */

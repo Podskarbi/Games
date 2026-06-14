@@ -75,15 +75,22 @@
 
     <!-- ===================== GAME / RIDDLE SCREEN ===================== -->
     <section id="screen-game" class="screen">
-      <div class="park-bg">
-        <div class="sky"></div>
-        <div class="hills"></div>
-        <div class="ground"></div>
-        <div id="game-avatar"></div>
-        <div class="detective">
-          <div class="detective-cat">🐱🔎</div>
+      <div class="city-scene">
+        <div id="city-art" class="city-art"></div>
+        <span class="cloud cloud-a"></span>
+        <span class="cloud cloud-b"></span>
+        <span class="cloud cloud-c"></span>
+        <span class="bird bird-a">︶ ︶</span>
+        <span class="bird bird-b">︶ ︶</span>
+        <div id="game-avatar" class="cs-avatar"></div>
+        <div class="cs-detective">
+          <div id="detective-art" class="detective-art"></div>
           <div class="detective-name">Detective Whiskers</div>
         </div>
+      </div>
+      <div class="location-strip">
+        <span class="loc-pin">🔎</span>
+        <span id="loc-now">On the case in Karandas…</span>
       </div>
 
       <div class="riddle-card">
@@ -101,7 +108,7 @@
     <section id="screen-map" class="screen">
       <h2>Map of Karandas</h2>
       <p class="map-help">Solve riddles to light up new places. ✨</p>
-      <div id="map-grid"></div>
+      <div id="city-map" class="city-map"></div>
       <button class="bigbtn back-btn" data-go="game">Back to Detective Whiskers 🔎</button>
     </section>
 
