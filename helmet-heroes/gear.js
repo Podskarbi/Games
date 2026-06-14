@@ -15,6 +15,10 @@ const HELMETS = [
   { id: "flame",   name: "Flame Helmet",  shell: "#ff5a3c", stripe: "#ffd93b", unlockScore: 2000 },
   { id: "galaxy",  name: "Galaxy Dome",   shell: "#7b4cff", stripe: "#b9f2ff", unlockScore: 4000 },
   { id: "gold",    name: "Golden Guard",  shell: "#ffc83d", stripe: "#7a4a00", unlockScore: 7000 },
+  { id: "mint",    name: "Mint Shell",    shell: "#3ddc97", stripe: "#06402b", unlockScore: 9500 },
+  { id: "candy",   name: "Candy Pop",     shell: "#ff7eb6", stripe: "#ffffff", unlockScore: 12000 },
+  { id: "shadow",  name: "Shadow Helmet", shell: "#3a3f55", stripe: "#9be7ff", unlockScore: 15000 },
+  { id: "rainbow", name: "Rainbow Rider", shell: "#ff5a3c", stripe: "#3a7bff", unlockScore: 20000 },
 ];
 
 const BOARDS = [
@@ -22,6 +26,10 @@ const BOARDS = [
   { id: "teal",   name: "Teal Cruiser", deck: "#1fb3a6", wheels: "#062e2a", unlockScore: 1200 },
   { id: "pink",   name: "Pink Pop",     deck: "#ff7eb6", wheels: "#3a0e25", unlockScore: 3000 },
   { id: "carbon", name: "Carbon Pro",   deck: "#2d2d3a", wheels: "#9be7ff", unlockScore: 5500 },
+  { id: "lava",   name: "Lava Deck",    deck: "#ff5a3c", wheels: "#ffd93b", unlockScore: 8000 },
+  { id: "galaxy", name: "Galaxy Glide", deck: "#5b3fb8", wheels: "#b9f2ff", unlockScore: 11000 },
+  { id: "neon",   name: "Neon Night",   deck: "#0f1630", wheels: "#3ddc97", unlockScore: 14000 },
+  { id: "goldb",  name: "Gold Rush",    deck: "#ffc83d", wheels: "#7a4a00", unlockScore: 18000 },
 ];
 
 // Friendly fact cards shown between levels (light, never preachy).
