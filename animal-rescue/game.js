@@ -189,49 +189,47 @@
     return riddles.find((r) => !isSolved(r.id)) || null;
   }
 
-  // Tidy text: lowercase, trim, drop punctuation and "a/an/the".
-  function tidy(s) {
-    return String(s).toLowerCase().trim()
-      .replace(/[^a-z0-9 ]/g, "")
-      .replace(/^(a|an|the)\s+/, "")
-      .replace(/\s+/g, " ");
-  }
-
-  // Allow tiny spelling mistakes (edit distance ≤ 1 for short words).
-  function closeEnough(guess, target) {
-    if (guess === target) return true;
-    if (Math.abs(guess.length - target.length) > 1) return false;
-    let i = 0, j = 0, edits = 0;
-    while (i < guess.length && j < target.length) {
-      if (guess[i] === target[j]) { i++; j++; continue; }
-      if (++edits > 1) return false;
-      if (guess.length > target.length) i++;
-      else if (guess.length < target.length) j++;
-      else { i++; j++; }
+  // Build 3 tappable choices: the right answer + 2 others, shuffled.
+  // We pick the wrong choices from other riddles' answers so they're always
+  // real, kid-friendly words. Stored on `currentChoices` so they stay put.
+  let currentChoices = [];
+  function buildChoices(r) {
+    const others = riddles
+      .filter((x) => x.id !== r.id)
+      .map((x) => x.answer)
+      .filter((a) => a.toLowerCase() !== r.answer.toLowerCase());
+    // shuffle the distractor pool and take two unique ones
+    for (let i = others.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [others[i], others[j]] = [others[j], others[i]];
     }
-    edits += (guess.length - i) + (target.length - j);
-    return edits <= 1;
-  }
-
-  function answerMatches(riddle, guess) {
-    const g = tidy(guess);
-    if (!g) return false;
-    const targets = [riddle.answer].concat(riddle.accept || []);
-    return targets.some((t) => closeEnough(g, tidy(t)));
+    const wrongs = [];
+    for (const w of others) {
+      if (wrongs.length >= 2) break;
+      if (!wrongs.some((x) => x.toLowerCase() === w.toLowerCase())) wrongs.push(w);
+    }
+    const choices = [{ text: r.answer, correct: true }]
+      .concat(wrongs.map((w) => ({ text: w, correct: false })));
+    // shuffle the final three
+    for (let i = choices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [choices[i], choices[j]] = [choices[j], choices[i]];
+    }
+    return choices;
   }
 
   function renderRiddle() {
     const r = currentRiddle();
     const fb = document.getElementById("answer-feedback");
     const hint = document.getElementById("hint-text");
-    const input = document.getElementById("answer-input");
+    const optionsEl = document.getElementById("answer-options");
 
     renderAvatarInto(document.getElementById("game-avatar"));
     fb.textContent = "";
     fb.className = "feedback";
     hint.textContent = "";
     hint.classList.remove("show");
-    if (input) input.value = "";
+    optionsEl.innerHTML = "";
 
     if (!r) {
       // Everything solved — go celebrate the ending.
@@ -241,25 +239,31 @@
     document.getElementById("riddle-progress").textContent =
       `Clue ${rescuedCount() + 1} of ${riddles.length}`;
     document.getElementById("riddle-text").textContent = r.riddleText;
-    document.getElementById("btn-hint").textContent = "🦊 Ask Clever for a hint";
+    document.getElementById("btn-hint").textContent = "Need a hint? 🔎";
+
+    // Build the three tap-to-answer buttons.
+    currentChoices = buildChoices(r);
+    currentChoices.forEach((c) => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.textContent = cap(c.text);
+      btn.addEventListener("click", () => chooseAnswer(r, c, btn));
+      optionsEl.appendChild(btn);
+    });
   }
 
-  function trySubmit() {
-    const r = currentRiddle();
-    if (!r) return;
-    const input = document.getElementById("answer-input");
+  function chooseAnswer(r, choice, btn) {
     const fb = document.getElementById("answer-feedback");
-    const guess = input.value;
-
-    if (answerMatches(r, guess)) {
+    if (choice.correct) {
       state.solved.push(r.id);
       save();
       celebrate(r);
     } else {
-      fb.textContent = pick(["Not quite — try again! 💪", "So close! Have another go.", "Hmm, try a different word!"]);
+      // Gently mark the wrong choice and let them try another.
+      btn.classList.add("wrong");
+      btn.disabled = true;
+      fb.textContent = pick(["Not quite — try again! 💪", "Oops, try another!", "Hmm, pick a different one!"]);
       fb.className = "feedback try";
-      input.focus();
-      input.select();
     }
   }
 
@@ -375,16 +379,11 @@
 
   document.getElementById("btn-avatar-done").addEventListener("click", () => show("game"));
 
-  document.getElementById("btn-answer").addEventListener("click", trySubmit);
-  document.getElementById("answer-input").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") trySubmit();
-  });
-
   document.getElementById("btn-hint").addEventListener("click", () => {
     const r = currentRiddle();
     if (!r) return;
     const hint = document.getElementById("hint-text");
-    hint.textContent = "🦊 Clever says: " + r.hint;
+    hint.textContent = "🐱 Detective Whiskers says: " + r.hint;
     hint.classList.add("show");
   });
 

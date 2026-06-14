@@ -38,8 +38,10 @@ Then visit **http://localhost:8000** in your browser.
 ## Want to add or change a riddle?
 
 Open `riddles.js`. Copy one of the blocks and change the words. Each riddle needs an
-`answer`, a `hint`, a `location`, an `animal`, an `emoji`, and a `badge`. The game
-accepts small spelling mistakes and ignores CAPITAL letters, so kids don't get stuck.
+`answer`, a `hint`, a `location`, an `animal`, an `emoji`, and a `badge`. Kids **tap one of
+three answer choices** instead of typing, so no spelling needed — the two "wrong" choices are
+picked automatically from the other riddles' answers. (The `accept` field of extra spellings
+is kept for reference but isn't needed for tapping.)
 
 ## Good to know
 
