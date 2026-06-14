@@ -47,6 +47,11 @@ html, body {
 a.ctrl-btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
 .exit-ctrl { background: #ff5a3c; }
 .ctrl-btn.off { background: var(--red); }
+.ctrl-btn.alert { background: var(--red); animation: ctrlpulse 0.4s ease-in-out infinite; }
+@keyframes ctrlpulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,90,60,0.6); }
+  50% { transform: scale(1.08); box-shadow: 0 0 0 10px rgba(255,90,60,0); }
+}
 .ctrl-btn.small { padding: 14px 16px; }
 
 /* ---------- Overlays (menus) ---------- */

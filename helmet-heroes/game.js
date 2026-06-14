@@ -96,6 +96,8 @@
       floats: [], flash: null, flashT: 0, paused: false,
       helmetData: helmetById(save.helmet), boardData: boardById(save.board),
       escapeMsgT: 0, particles: [], shake: 0,
+      challenge: { active: false, timeLeft: 0, total: 0 },
+      nextChallengeT: 9 + Math.random() * 7,
     };
   }
 
@@ -154,6 +156,7 @@
     o.start(t); o.stop(t + 0.55);
   }
   function sndSiren() { beep(700, 0.15, "sine", 0.05); }
+  function sndAlert() { beep(880, 0.12, "square", 0.07); beep(660, 0.12, "square", 0.06); }
 
   // ============================================================
   //  GAMEPLAY
@@ -285,14 +288,57 @@
   function setHelmetButton() {
     const b = document.getElementById("helmet-toggle");
     if (!run) return;
-    b.textContent = run.helmet ? "🪖 Helmet: ON" : "😣 Helmet: OFF";
-    b.classList.toggle("off", !run.helmet);
+    const ch = run.challenge.active;
+    b.textContent = ch ? "🪖 PUT IT ON!" : (run.helmet ? "🪖 Helmet: ON" : "😣 Helmet: OFF");
+    b.classList.toggle("off", !run.helmet && !ch);
+    b.classList.toggle("alert", ch);
   }
   function toggleHelmet() {
     if (!run || state !== S.PLAY) return;
+    // During a "helmet flew off" challenge, pressing it = the save.
+    if (run.challenge.active) { succeedChallenge(); return; }
     run.helmet = !run.helmet;
     if (run.helmet) { run.noHelmetT = 0; if (run.cop.active) setFlash("Helmet on — escaping!", "#1fb3a6"); }
     setHelmetButton();
+  }
+
+  // ---------- "Helmet flew off!" reaction challenge ----------
+  function startChallenge() {
+    run.challenge.active = true;
+    run.challenge.total = 2.6;
+    run.challenge.timeLeft = 2.6;
+    run.helmet = false;
+    run.noHelmetT = 0;            // re-align the chase timer to this moment
+    spawnHelmetPop();
+    setFlash("⚠️ HELMET FLEW OFF!", "#ff5a3c");
+    sndAlert();
+    setHelmetButton();
+  }
+  function succeedChallenge() {
+    const frac = Math.max(0, run.challenge.timeLeft / run.challenge.total);
+    const reward = Math.round(8 + 22 * frac);   // faster reaction -> up to +30
+    run.stamina = Math.min(100, run.stamina + reward);
+    run.challenge.active = false;
+    run.helmet = true; run.noHelmetT = 0;
+    run.nextChallengeT = 11 + Math.random() * 9;
+    addFloat("NICE SAVE! +" + reward + " ⚡", "#1fb3a6");
+    setFlash((frac > 0.6 ? "LIGHTNING FAST! " : "Saved! ") + "+" + reward + " energy ⚡", "#1fb3a6");
+    sndLand(true);
+    setHelmetButton();
+  }
+  function failChallenge() {
+    run.challenge.active = false;
+    run.nextChallengeT = 11 + Math.random() * 9;
+    setFlash("Too slow! Helmet still off! 😬", "#ff5a3c");
+    sndWipe();
+    setHelmetButton();
+  }
+  function spawnHelmetPop() {
+    const cols = run.helmetData;
+    run.particles.push({
+      x: skaterPX, y: groundY - 78, vx: 120, vy: -240, life: 1.0, t: 0, r: 13,
+      kind: "helmet", col: cols.shell,
+    });
   }
 
   // ============================================================
@@ -308,6 +354,16 @@
     if (run.escapeMsgT > 0) run.escapeMsgT -= dt;
     if (run.shake > 0) run.shake = Math.max(0, run.shake - dt);
     updateParticles(dt);
+
+    // "Helmet flew off!" reaction challenge
+    if (run.challenge.active) {
+      run.challenge.timeLeft -= dt;
+      if (run.challenge.timeLeft <= 0) failChallenge();
+    } else if (run.helmet && !run.cop.active) {
+      // only schedule when calmly skating with the helmet on
+      run.nextChallengeT -= dt;
+      if (run.nextChallengeT <= 0) startChallenge();
+    }
 
     spawnObstacles();
 
@@ -374,6 +430,7 @@
       drawHUD();
       drawFloats();
       drawFlash();
+      drawChallenge();
       if (run.paused) drawPaused();
     } else {
       // Idle skater on the title/menus background
@@ -403,6 +460,10 @@
       if (p.kind === "dust") {
         ctx.globalAlpha = a * 0.6; ctx.fillStyle = "#cfd6e0";
         ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (0.6 + a * 0.6), 0, Math.PI * 2); ctx.fill();
+      } else if (p.kind === "helmet") {
+        ctx.globalAlpha = a; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.t * 7);
+        ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(0, 0, p.r, Math.PI, 0); ctx.fill();
+        ctx.fillRect(-p.r, -2, p.r * 2, 4); ctx.restore();
       } else {
         ctx.globalAlpha = a; ctx.fillStyle = p.col;
         ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.t * 9);
@@ -410,6 +471,26 @@
       }
     }
     ctx.globalAlpha = 1;
+  }
+
+  // Big on-screen prompt + countdown bar during the helmet challenge.
+  function drawChallenge() {
+    if (!run.challenge.active) return;
+    const cw = Math.min(W - 40, 460), cx = W / 2, top = H * 0.20;
+    // panel
+    ctx.fillStyle = "rgba(255,90,60,0.95)"; roundRect(cx - cw / 2, top, cw, 92, 16); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.textAlign = "center";
+    ctx.font = "800 22px Baloo 2, sans-serif";
+    ctx.fillText("⚠️ Helmet flew off!", cx, top + 30);
+    ctx.font = "800 16px Baloo 2, sans-serif";
+    ctx.fillText("Tap 🪖 (or press H) — FAST!", cx, top + 54);
+    // countdown bar (green -> red), wider = more time left
+    const frac = Math.max(0, run.challenge.timeLeft / run.challenge.total);
+    const barW = cw - 36, bx = cx - barW / 2, byy = top + 68;
+    ctx.fillStyle = "rgba(0,0,0,0.25)"; roundRect(bx, byy, barW, 12, 6); ctx.fill();
+    ctx.fillStyle = frac > 0.5 ? "#5dff8b" : frac > 0.25 ? "#ffd93b" : "#ffffff";
+    roundRect(bx, byy, barW * frac, 12, 6); ctx.fill();
+    ctx.textAlign = "left";
   }
 
   function drawSun() {
