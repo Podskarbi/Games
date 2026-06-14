@@ -36,6 +36,31 @@
       align-items: center; justify-content: center; min-height: 180px;
     }
     .soon .big { font-size: 3rem; }
+    .howto {
+      max-width: 620px; margin: 40px auto 0; background: #fff;
+      border-radius: 24px; box-shadow: 0 8px 0 rgba(0,0,0,0.12);
+      padding: 24px 26px; text-align: left;
+    }
+    .howto h2 { font-size: 1.4rem; margin: 0 0 6px; text-align: center; }
+    .howto .lead { text-align: center; margin: 0 0 16px; opacity: 0.85; font-size: 1.05rem; }
+    .howto ol { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+    .howto li {
+      position: relative; padding: 10px 0 10px 48px; font-size: 1.08rem; line-height: 1.45;
+      counter-increment: step;
+    }
+    .howto li::before {
+      content: counter(step); position: absolute; left: 0; top: 7px;
+      width: 32px; height: 32px; border-radius: 50%; background: var(--orange); color: #fff;
+      font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
+    }
+    .share-ico {
+      display: inline-block; font-weight: 800; background: #eef3ff; color: #3a7bff;
+      border-radius: 7px; padding: 1px 8px;
+    }
+    .howto .tip {
+      margin: 16px 0 0; background: #fff4cc; border-radius: 12px; padding: 12px 14px;
+      font-size: 1rem;
+    }
     footer { margin-top: 36px; font-size: 0.95rem; opacity: 0.7; }
   </style>
 </head>
@@ -62,6 +87,18 @@
       <p>A new game will appear here.</p>
     </div>
   </div>
+
+  <section class="howto">
+    <h2>📲 Put a game on your iPad</h2>
+    <p class="lead">Each game can get its own icon, just like a real app. Do this once for each game:</p>
+    <ol>
+      <li>Open the game in <strong>Safari</strong> (tap its card above).</li>
+      <li>Tap the <strong>Share</strong> button <span class="share-ico">⬆️</span> — a square with an arrow pointing up.</li>
+      <li>Scroll down the list and tap <strong>“Add to Home Screen.”</strong></li>
+      <li>Tap <strong>Add</strong>. The game’s icon appears on your Home Screen and opens full-screen! 🎉</li>
+    </ol>
+    <p class="tip">💡 Use <strong>Safari</strong> for this (not Chrome). Each game gets its own icon — so add both! 🐾🛹</p>
+  </section>
 
   <footer>No ads · No logins · Safe &amp; kid-friendly</footer>
 </body>
