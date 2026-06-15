@@ -29,7 +29,7 @@
 
   // ---------- Save data ----------
   const SAVE_KEY = "helmetHeroesSave_v1";
-  const defaultAvatar = () => ({ gender: "boy", skin: "#f3c39a", hairStyle: "short", hairColor: "#5a3a2a", shirt: "#ff7a3c", face: "happy" });
+  const defaultAvatar = () => ({ gender: "boy", skin: "#f3c39a", hairStyle: "short", hairColor: "#5a3a2a", shirt: "#ff7a3c", face: "happy", ride: "board" });
   const defaultSave = () => ({ best: 0, helmet: "starter", board: "maple", avatar: defaultAvatar() });
   let save = loadSave();
   function loadSave() {
@@ -47,6 +47,7 @@
 
   // ---------- Avatar customization options ----------
   const GENDERS = [{ id: "boy", label: "🧒 Boy" }, { id: "girl", label: "👧 Girl" }];
+  const RIDES = [{ id: "board", label: "🛹 Skateboard" }, { id: "scooter", label: "🛴 Scooter" }];
   const SKINS = ["#ffe0bd", "#f3c39a", "#e0ac82", "#c68642", "#8d5524", "#5c3a1e"];
   const HAIR_COLORS = ["#2b2b2b", "#5a3a2a", "#a8642a", "#e3b34d", "#d94f8a", "#5b8cff", "#e8e8e8"];
   const SHIRTS = ["#ff7a3c", "#ff8fb1", "#b58cff", "#5bd1c0", "#6fc36b", "#ffd93b", "#ff5a5a", "#4aa6f5"];
@@ -131,6 +132,14 @@
       run.particles.push({
         x: x + (Math.random() - 0.5) * 16, y: y, vx: Math.cos(a) * sp, vy: -Math.random() * 70 - 10,
         life: 0.5 + Math.random() * 0.3, t: 0, r: 3 + Math.random() * 4, kind: "dust",
+      });
+    }
+  }
+  function spawnSparks(x, y) {
+    for (let i = 0; i < 8; i++) {
+      run.particles.push({
+        x: x + 8, y: y - 6, vx: -(50 + Math.random() * 150), vy: -20 - Math.random() * 55,
+        life: 0.3 + Math.random() * 0.2, t: 0, r: 2 + Math.random() * 2, kind: "spark", col: Math.random() > 0.5 ? "#ffd93b" : "#fff0a0",
       });
     }
   }
@@ -238,7 +247,7 @@
     run.score += pts;
     run.lands++; run.landsThisLevel++;
     run.skater.trickT = 0.5; run.skater.trickKind = o.type;
-    spawnDust(skaterPX, groundY + 2);
+    if (o.type === "rail") spawnSparks(skaterPX, groundY - 10); else spawnDust(skaterPX, groundY + 2);
     if (run.helmet) run.stamina = Math.min(100, run.stamina + o.trick.staminaGain * (perfect ? 1.25 : 1));
     addFloat((perfect ? "PERFECT! " : "") + o.trick.name + "  +" + pts, perfect ? "#ffd93b" : "#ffffff");
     sndLand(perfect); if (run.combo >= 3) sndCombo(run.combo);
@@ -482,6 +491,9 @@
       if (p.kind === "dust") {
         ctx.globalAlpha = a * 0.6; ctx.fillStyle = "#cfd6e0";
         ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (0.6 + a * 0.6), 0, Math.PI * 2); ctx.fill();
+      } else if (p.kind === "spark") {
+        ctx.globalAlpha = a; ctx.fillStyle = p.col;
+        ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.5, p.r * a), 0, Math.PI * 2); ctx.fill();
       } else if (p.kind === "helmet") {
         ctx.globalAlpha = a; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.t * 7);
         ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(0, 0, p.r, Math.PI, 0); ctx.fill();
@@ -588,23 +600,60 @@
     }
     ctx.lineTo(W + 40, groundY + 30); ctx.lineTo(-20, groundY + 30); ctx.closePath(); ctx.fill();
   }
-  // Roadside trees + lampposts (near parallax, just behind the action plane)
+  // Roadside skate-park objects (near parallax, just behind the action plane)
   function drawRoadside() {
-    const off = parScroll(0.8), period = 240, base = groundY + 2;
-    let i = Math.floor((off - 120) / period);
+    const off = parScroll(0.8), period = 150, base = groundY + 2;
+    let i = Math.floor((off - 140) / period);
     for (; ; i++) {
-      const x = i * period - off; if (x > W + 120) break;
-      if (i % 2 === 0) {
-        ctx.fillStyle = "#5a6172"; ctx.fillRect(x - 2.5, base - 56, 5, 56);
-        ctx.fillStyle = "#ffe78a"; ctx.beginPath(); ctx.arc(x, base - 60, 7, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "rgba(255,231,138,0.25)"; ctx.beginPath(); ctx.arc(x, base - 60, 14, 0, Math.PI * 2); ctx.fill();
-      } else {
-        ctx.fillStyle = "#7a5232"; ctx.fillRect(x - 5, base - 34, 10, 34);
-        ctx.fillStyle = "#4e9c46"; ctx.beginPath(); ctx.arc(x, base - 44, 24, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#5cb255"; ctx.beginPath(); ctx.arc(x - 14, base - 36, 16, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(x + 14, base - 36, 16, 0, Math.PI * 2); ctx.fill();
-      }
+      const x = i * period - off; if (x > W + 140) break;
+      const kind = ((i % 7) + 7) % 7;
+      if (kind === 0) prLamp(x, base);
+      else if (kind === 1) prTree(x, base);
+      else if (kind === 2) prBench(x, base);
+      else if (kind === 3) prTrash(x, base);
+      else if (kind === 4) prHydrant(x, base);
+      else if (kind === 5) prPlanter(x, base);
+      else prSign(x, base);
     }
+  }
+  function prLamp(x, base) {
+    ctx.fillStyle = "#5a6172"; ctx.fillRect(x - 2.5, base - 56, 5, 56);
+    ctx.fillStyle = "#ffe78a"; ctx.beginPath(); ctx.arc(x, base - 60, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(255,231,138,0.25)"; ctx.beginPath(); ctx.arc(x, base - 60, 14, 0, Math.PI * 2); ctx.fill();
+  }
+  function prTree(x, base) {
+    ctx.fillStyle = "#7a5232"; ctx.fillRect(x - 5, base - 34, 10, 34);
+    ctx.fillStyle = "#4e9c46"; ctx.beginPath(); ctx.arc(x, base - 44, 24, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#5cb255"; ctx.beginPath(); ctx.arc(x - 14, base - 36, 16, 0, Math.PI * 2); ctx.arc(x + 14, base - 36, 16, 0, Math.PI * 2); ctx.fill();
+  }
+  function prBench(x, base) {
+    ctx.fillStyle = "#cf8a3e"; ctx.fillRect(x - 22, base - 22, 44, 5); ctx.fillStyle = "#b9742e"; ctx.fillRect(x - 22, base - 11, 44, 5);
+    ctx.fillStyle = "#7a4a22"; ctx.fillRect(x - 18, base - 11, 4, 12); ctx.fillRect(x + 14, base - 11, 4, 12);
+  }
+  function prTrash(x, base) {
+    ctx.fillStyle = "#3f6b8a"; ctx.fillRect(x - 9, base - 26, 18, 26);
+    ctx.fillStyle = "#345b76"; ctx.fillRect(x - 10, base - 28, 20, 4);
+    ctx.fillStyle = "rgba(255,255,255,0.14)"; ctx.fillRect(x - 5, base - 22, 3, 18);
+  }
+  function prHydrant(x, base) {
+    ctx.fillStyle = "#d23b3b"; ctx.fillRect(x - 6, base - 22, 12, 22);
+    ctx.beginPath(); ctx.arc(x, base - 23, 7, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = "#b02e2e"; ctx.fillRect(x - 10, base - 15, 20, 4); ctx.fillRect(x - 7, base - 2, 14, 3);
+    ctx.fillStyle = "#ffd0c4"; ctx.beginPath(); ctx.arc(x, base - 27, 2.4, 0, Math.PI * 2); ctx.fill();
+  }
+  function prPlanter(x, base) {
+    ctx.fillStyle = "#4e9c46"; ctx.beginPath(); ctx.arc(x, base - 16, 12, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#5cb255"; ctx.beginPath(); ctx.arc(x - 7, base - 12, 8, 0, Math.PI * 2); ctx.arc(x + 7, base - 12, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#ff7eb6"; ctx.beginPath(); ctx.arc(x - 4, base - 20, 2.4, 0, Math.PI * 2); ctx.fillStyle = "#ffd93b"; ctx.arc(x + 5, base - 18, 2.4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#b07b4a"; ctx.fillRect(x - 12, base - 12, 24, 12); ctx.fillStyle = "#9a6a3f"; ctx.fillRect(x - 13, base - 13, 26, 3);
+  }
+  function prSign(x, base) {
+    ctx.fillStyle = "#5a6172"; ctx.fillRect(x - 20, base - 30, 4, 30); ctx.fillRect(x + 16, base - 30, 4, 30);
+    ctx.fillStyle = "#3a7bff"; roundRect(x - 27, base - 54, 54, 26, 5); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.15)"; roundRect(x - 27, base - 54, 54, 7, 5); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.font = "800 10px Baloo 2, sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("SKATE", x, base - 41); ctx.fillText("PARK", x, base - 31);
+    ctx.textAlign = "left";
   }
   function drawGround() {
     // asphalt
@@ -721,7 +770,7 @@
     const a = save.avatar;
     return {
       skin: a.skin, skinSh: shade(a.skin, -30), hair: a.hairColor, hairSh: shade(a.hairColor, -30),
-      hairStyle: a.hairStyle, gender: a.gender, face: a.face, shirt: a.shirt,
+      hairStyle: a.hairStyle, gender: a.gender, face: a.face, shirt: a.shirt, ride: a.ride,
     };
   }
   function rrC(c, x, y, w, h, r) {
@@ -735,14 +784,19 @@
     const sk = run.skater;
     const bob = Math.sin(sk.bob) * 2;
     if (sk.wipeT > 0) { drawWipeout(skaterPX, groundY); return; }
-    let spin = 0, lift = 0, grind = 0;
+    let spin = 0, lift = 0, grind = 0, fwd = 0;
     if (sk.trickT > 0) {
-      const p = 1 - sk.trickT / 0.5;
-      if (sk.trickKind === "ramp") { spin = p * Math.PI * 2; lift = Math.sin(p * Math.PI) * 46; }
-      else if (sk.trickKind === "rail") { grind = 1; lift = Math.sin(p * Math.PI) * 20; }
-      else { lift = Math.sin(p * Math.PI) * 8; } // stumble
+      const p = 1 - sk.trickT / 0.5;       // 0 → 1 over the trick
+      const air = Math.sin(p * Math.PI);   // smooth up-then-down arc
+      if (sk.trickKind === "ramp") {
+        // launch up off the ramp, sail forward, flip in the air
+        spin = p * Math.PI * 2; lift = air * 84; fwd = air * 26;
+      } else if (sk.trickKind === "rail") {
+        // grind: stay low on the rail and slide along it
+        grind = 1; lift = 13; fwd = (p - 0.5) * 44;
+      } else { lift = air * 10; } // stumble
     }
-    drawSkater(ctx, skaterPX, groundY - lift + bob, Object.assign({
+    drawSkater(ctx, skaterPX + fwd, groundY - lift + bob, Object.assign({
       helmet: run.helmet, shell: run.helmetData.shell, stripe: run.helmetData.stripe,
       deck: run.boardData.deck, wheels: run.boardData.wheels, spin: spin, grind: grind,
     }, avatarOpts()), groundY);
@@ -768,22 +822,44 @@
     c.save();
     c.translate(x, y);
     if (o.spin) { c.translate(0, -26); c.rotate(o.spin); c.translate(0, 26); }
-    // Board
-    c.fillStyle = o.deck; rrC(c, -36, -8, 72, 11, 6); c.fill();
-    c.fillStyle = "rgba(0,0,0,0.18)"; rrC(c, -34, -8, 68, 4, 3); c.fill();
-    c.fillStyle = "#9aa1ad"; c.fillRect(-24, 1, 4, 5); c.fillRect(20, 1, 4, 5);
-    c.fillStyle = o.wheels;
-    for (const wx of [-22, 22]) { c.beginPath(); c.arc(wx, 5, 5.5, 0, Math.PI * 2); c.fill();
-      c.fillStyle = "rgba(0,0,0,0.25)"; c.beginPath(); c.arc(wx, 5, 2, 0, Math.PI * 2); c.fill(); c.fillStyle = o.wheels; }
-    // Legs (denim) + shoes
-    c.strokeStyle = "#2b3358"; c.lineWidth = 8; c.lineCap = "round";
-    const stance = o.grind ? 17 : 12;
-    c.beginPath();
-    c.moveTo(-stance, -8); c.lineTo(-9, -22); c.lineTo(-5, -34);
-    c.moveTo(stance, -8); c.lineTo(10, -22); c.lineTo(8, -34); c.stroke();
-    c.strokeStyle = "#e9edf4"; c.lineWidth = 6;
-    c.beginPath(); c.moveTo(-stance - 3, -7); c.lineTo(-stance + 6, -7);
-    c.moveTo(stance - 6, -7); c.lineTo(stance + 3, -7); c.stroke();
+    const scooter = o.ride === "scooter";
+    if (scooter) {
+      // Scooter: deck + wheels + stem + handlebar
+      c.fillStyle = o.deck; rrC(c, -28, -8, 52, 9, 5); c.fill();
+      c.fillStyle = "rgba(0,0,0,0.18)"; rrC(c, -26, -8, 48, 3.5, 3); c.fill();
+      c.fillStyle = o.wheels;
+      for (const wx of [-20, 18]) { c.beginPath(); c.arc(wx, 5, 5, 0, Math.PI * 2); c.fill();
+        c.fillStyle = "rgba(0,0,0,0.25)"; c.beginPath(); c.arc(wx, 5, 1.8, 0, Math.PI * 2); c.fill(); c.fillStyle = o.wheels; }
+      c.strokeStyle = "#b6bdc9"; c.lineWidth = 4.5; c.lineCap = "round";
+      c.beginPath(); c.moveTo(20, -6); c.lineTo(20, -52); c.stroke();
+      c.lineWidth = 4; c.beginPath(); c.moveTo(10, -52); c.lineTo(30, -52); c.stroke();
+      c.strokeStyle = "#2b2f45"; c.lineWidth = 5;
+      c.beginPath(); c.moveTo(10, -52); c.lineTo(14.5, -52); c.moveTo(25.5, -52); c.lineTo(30, -52); c.stroke();
+      // Legs (upright, both feet on deck)
+      c.strokeStyle = "#2b3358"; c.lineWidth = 8; c.lineCap = "round";
+      c.beginPath();
+      c.moveTo(-5, -8); c.lineTo(-4, -22); c.lineTo(-3, -34);
+      c.moveTo(7, -8); c.lineTo(5, -22); c.lineTo(4, -34); c.stroke();
+      c.strokeStyle = "#e9edf4"; c.lineWidth = 6;
+      c.beginPath(); c.moveTo(-9, -7); c.lineTo(-1, -7); c.moveTo(3, -7); c.lineTo(10, -7); c.stroke();
+    } else {
+      // Skateboard: deck + grip + trucks + wheels
+      c.fillStyle = o.deck; rrC(c, -36, -8, 72, 11, 6); c.fill();
+      c.fillStyle = "rgba(0,0,0,0.18)"; rrC(c, -34, -8, 68, 4, 3); c.fill();
+      c.fillStyle = "#9aa1ad"; c.fillRect(-24, 1, 4, 5); c.fillRect(20, 1, 4, 5);
+      c.fillStyle = o.wheels;
+      for (const wx of [-22, 22]) { c.beginPath(); c.arc(wx, 5, 5.5, 0, Math.PI * 2); c.fill();
+        c.fillStyle = "rgba(0,0,0,0.25)"; c.beginPath(); c.arc(wx, 5, 2, 0, Math.PI * 2); c.fill(); c.fillStyle = o.wheels; }
+      // Legs (knees bent)
+      c.strokeStyle = "#2b3358"; c.lineWidth = 8; c.lineCap = "round";
+      const stance = o.grind ? 17 : 12;
+      c.beginPath();
+      c.moveTo(-stance, -8); c.lineTo(-9, -22); c.lineTo(-5, -34);
+      c.moveTo(stance, -8); c.lineTo(10, -22); c.lineTo(8, -34); c.stroke();
+      c.strokeStyle = "#e9edf4"; c.lineWidth = 6;
+      c.beginPath(); c.moveTo(-stance - 3, -7); c.lineTo(-stance + 6, -7);
+      c.moveTo(stance - 6, -7); c.lineTo(stance + 3, -7); c.stroke();
+    }
     // Torso (shirt color from avatar)
     c.strokeStyle = o.shirt; c.lineWidth = 15;
     c.beginPath(); c.moveTo(1, -33); c.lineTo(1, -58); c.stroke();
@@ -791,8 +867,11 @@
     c.beginPath(); c.moveTo(5, -34); c.lineTo(5, -56); c.stroke();
     // Arms (skin) + short sleeves (shirt)
     c.strokeStyle = o.skin; c.lineWidth = 6; c.lineCap = "round";
-    c.beginPath(); c.moveTo(0, -52); c.lineTo(o.grind ? 26 : 19, -46);
-    c.moveTo(0, -52); c.lineTo(-16, -44); c.stroke();
+    if (scooter) {
+      c.beginPath(); c.moveTo(0, -52); c.lineTo(19, -50); c.moveTo(0, -52); c.lineTo(-14, -45); c.stroke();
+    } else {
+      c.beginPath(); c.moveTo(0, -52); c.lineTo(o.grind ? 26 : 19, -46); c.moveTo(0, -52); c.lineTo(-16, -44); c.stroke();
+    }
     c.strokeStyle = o.shirt; c.lineWidth = 7;
     c.beginPath(); c.moveTo(-3, -54); c.lineTo(-8, -49); c.moveTo(5, -54); c.lineTo(10, -49); c.stroke();
     // Head (skin) + ears
@@ -1004,6 +1083,7 @@
   function renderGear() {
     tempHelmet = save.helmet; tempBoard = save.board;
     buildAvChips("gender", GENDERS);
+    buildAvChips("ride", RIDES);
     buildAvSwatches("skin", SKINS);
     buildAvChips("hairStyle", HAIR_STYLES);
     buildAvSwatches("hairColor", HAIR_COLORS);
