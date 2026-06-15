@@ -400,40 +400,69 @@
     return s;
   }
 
-  // Detective Whiskers — a drawn cat detective with a deerstalker hat & magnifier.
+  // Detective Whiskers — modelled on Hania's fluffy cream-and-white cat:
+  // big amber eyes, white face blaze + chest ruff, tufted ears, long whiskers.
   function buildDetective() {
     return `<svg viewBox="0 0 120 120" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="60" cy="114" rx="30" ry="5" fill="rgba(0,0,0,0.12)"/>
-      <!-- coat/body -->
-      <path d="M40 112 Q40 78 60 78 Q80 78 80 112 Z" fill="#b9742e"/>
-      <path d="M60 80 L60 110" stroke="#9c5f22" stroke-width="2"/>
-      <!-- tail -->
-      <path class="cat-tail" d="M80 104 Q104 100 100 78" stroke="#9a9a9a" stroke-width="9" fill="none" stroke-linecap="round"/>
-      <!-- head -->
-      <circle cx="60" cy="54" r="26" fill="#a9a9a9"/>
-      <polygon points="40,38 36,18 56,32" fill="#a9a9a9"/>
-      <polygon points="80,38 84,18 64,32" fill="#a9a9a9"/>
-      <polygon points="41,34 39,23 51,31" fill="#f4b8c4"/>
-      <polygon points="79,34 81,23 69,31" fill="#f4b8c4"/>
-      <!-- deerstalker hat -->
-      <path d="M34 40 Q60 12 86 40 Q86 30 60 26 Q34 30 34 40 Z" fill="#7a5230"/>
-      <ellipse cx="60" cy="40" rx="28" ry="7" fill="#5f3f22"/>
-      <circle cx="60" cy="24" r="5" fill="#8a5e38"/>
-      <!-- face -->
-      <circle cx="51" cy="54" r="4" fill="#2a2a2a"/>
-      <circle cx="69" cy="54" r="4" fill="#2a2a2a"/>
-      <circle cx="52.2" cy="52.6" r="1.3" fill="#fff"/>
-      <circle cx="70.2" cy="52.6" r="1.3" fill="#fff"/>
-      <path d="M56 62 Q60 66 64 62" stroke="#3a2a2a" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <polygon points="57,59 63,59 60,63" fill="#f08a9a"/>
-      <g stroke="#cfcfcf" stroke-width="1.5">
-        <line x1="40" y1="58" x2="22" y2="55"/><line x1="40" y1="62" x2="23" y2="64"/>
-        <line x1="80" y1="58" x2="98" y2="55"/><line x1="80" y1="62" x2="97" y2="64"/>
+      <defs><radialGradient id="whiskEye" cx="0.45" cy="0.4" r="0.6">
+        <stop offset="0" stop-color="#f7d264"/><stop offset="0.55" stop-color="#e6a82c"/><stop offset="1" stop-color="#bb7c1a"/>
+      </radialGradient></defs>
+      <ellipse cx="60" cy="115" rx="30" ry="5" fill="rgba(0,0,0,0.12)"/>
+
+      <!-- fluffy tail: cream with a white tip -->
+      <path class="cat-tail" d="M80 105 Q109 101 102 73" stroke="#ecd6b6" stroke-width="11" fill="none" stroke-linecap="round"/>
+      <path class="cat-tail" d="M103 82 Q107 73 102 69" stroke="#fdfaf4" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+      <!-- body: cream sides + big white fluffy chest ruff -->
+      <path d="M38 115 Q36 80 60 78 Q84 80 82 115 Z" fill="#ecd6b6"/>
+      <path d="M46 115 Q44 84 60 82 Q76 84 74 115 L70 110 L66 114 L62 109 L58 114 L54 110 L50 114 Z" fill="#fdfaf4"/>
+
+      <!-- ears: cream/apricot, pink inner, white furnishing tufts -->
+      <path d="M40 41 Q33 16 38 14 Q51 22 57 35 Z" fill="#eecfa0"/>
+      <path d="M80 41 Q87 16 82 14 Q69 22 63 35 Z" fill="#eecfa0"/>
+      <path d="M42 36 Q40 23 43 22 Q49 27 52 34 Z" fill="#f3b9c6"/>
+      <path d="M78 36 Q80 23 77 22 Q71 27 68 34 Z" fill="#f3b9c6"/>
+      <g stroke="#fdfaf4" stroke-width="1.3" stroke-linecap="round">
+        <line x1="44" y1="33" x2="42" y2="24"/><line x1="47" y1="34" x2="46" y2="26"/>
+        <line x1="76" y1="33" x2="78" y2="24"/><line x1="73" y1="34" x2="74" y2="26"/>
       </g>
+
+      <!-- head: cream base with an apricot top -->
+      <circle cx="60" cy="56" r="26" fill="#efdcc0"/>
+      <path d="M36 52 Q60 30 84 52 Q60 42 36 52 Z" fill="#f1c99a" opacity="0.7"/>
+      <!-- fluffy white cheek floof -->
+      <path d="M37 58 Q29 66 34 77 Q41 72 43 63 Z" fill="#fdfaf4"/>
+      <path d="M83 58 Q91 66 86 77 Q79 72 77 63 Z" fill="#fdfaf4"/>
+      <!-- white blaze + muzzle -->
+      <path d="M55 34 Q60 30 65 34 L63 58 Q60 62 57 58 Z" fill="#fdfaf4"/>
+      <ellipse cx="60" cy="65" rx="17" ry="13" fill="#fdfaf4"/>
+
+      <!-- deerstalker detective hat -->
+      <path d="M34 42 Q60 13 86 42 Q86 31 60 27 Q34 31 34 42 Z" fill="#7a5230"/>
+      <ellipse cx="60" cy="42" rx="28" ry="7" fill="#5f3f22"/>
+      <circle cx="60" cy="25" r="5" fill="#8a5e38"/>
+
+      <!-- big round amber eyes -->
+      <circle cx="50" cy="55" r="7.2" fill="url(#whiskEye)" stroke="#a86a16" stroke-width="1"/>
+      <circle cx="70" cy="55" r="7.2" fill="url(#whiskEye)" stroke="#a86a16" stroke-width="1"/>
+      <ellipse cx="50" cy="55" rx="2.6" ry="4.8" fill="#3a2410"/>
+      <ellipse cx="70" cy="55" rx="2.6" ry="4.8" fill="#3a2410"/>
+      <circle cx="52" cy="52.4" r="1.6" fill="#fff"/><circle cx="72" cy="52.4" r="1.6" fill="#fff"/>
+
+      <!-- pink nose + mouth -->
+      <path d="M57 62 L63 62 L60 66 Z" fill="#ec8ca2"/>
+      <path d="M60 66 Q56 70 53 68 M60 66 Q64 70 67 68" stroke="#c79c76" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+
+      <!-- long white whiskers -->
+      <g stroke="#ffffff" stroke-width="1.4" stroke-linecap="round">
+        <line x1="47" y1="63" x2="20" y2="57"/><line x1="47" y1="66" x2="19" y2="67"/><line x1="47" y1="69" x2="22" y2="78"/>
+        <line x1="73" y1="63" x2="100" y2="57"/><line x1="73" y1="66" x2="101" y2="67"/><line x1="73" y1="69" x2="98" y2="78"/>
+      </g>
+
       <!-- magnifying glass -->
       <g class="cat-glass">
-        <line x1="84" y1="92" x2="98" y2="106" stroke="#7a5230" stroke-width="5" stroke-linecap="round"/>
-        <circle cx="80" cy="86" r="13" fill="rgba(180,225,255,0.55)" stroke="#5a6172" stroke-width="4"/>
+        <line x1="84" y1="94" x2="98" y2="108" stroke="#7a5230" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="80" cy="88" r="13" fill="rgba(180,225,255,0.5)" stroke="#5a6172" stroke-width="4"/>
       </g>
     </svg>`;
   }
