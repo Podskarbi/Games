@@ -113,7 +113,14 @@ h2 { font-size: clamp(1.6rem, 7vw, 2.4rem); margin: 0 0 0.4em; }
 #gear-canvas { background: rgba(255,255,255,0.08); border-radius: 18px; }
 .gear-pick { width: 100%; max-width: 460px; margin: 8px 0; }
 .gear-label { font-weight: 800; font-size: 1.15rem; text-align: left; margin-bottom: 6px; }
-.gear-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.gear-row, .av-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.av-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.av-swatch {
+  width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+  border: 3px solid rgba(255,255,255,0.3); box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
+  transition: transform 0.1s ease;
+}
+.av-swatch.selected { border-color: var(--yellow); transform: scale(1.15); }
 .gear-chip {
   position: relative; font-family: inherit; font-weight: 700; font-size: 0.95rem; color: #fff;
   border: 3px solid rgba(255,255,255,0.25); border-radius: 14px;

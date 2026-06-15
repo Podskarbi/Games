@@ -29,11 +29,14 @@
 
   // ---------- Save data ----------
   const SAVE_KEY = "helmetHeroesSave_v1";
-  const defaultSave = () => ({ best: 0, helmet: "starter", board: "maple" });
+  const defaultAvatar = () => ({ gender: "boy", skin: "#f3c39a", hairStyle: "short", hairColor: "#5a3a2a", shirt: "#ff7a3c", face: "happy" });
+  const defaultSave = () => ({ best: 0, helmet: "starter", board: "maple", avatar: defaultAvatar() });
   let save = loadSave();
   function loadSave() {
-    try { const r = localStorage.getItem(SAVE_KEY); if (r) return Object.assign(defaultSave(), JSON.parse(r)); }
-    catch (e) {}
+    try {
+      const r = localStorage.getItem(SAVE_KEY);
+      if (r) { const s = Object.assign(defaultSave(), JSON.parse(r)); s.avatar = Object.assign(defaultAvatar(), s.avatar || {}); return s; }
+    } catch (e) {}
     return defaultSave();
   }
   function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
@@ -41,6 +44,24 @@
   const HELMETS = window.HELMETS, BOARDS = window.BOARDS, TRICKS = window.TRICKS, FACTS = window.FACTS;
   const helmetById = (id) => HELMETS.find((h) => h.id === id) || HELMETS[0];
   const boardById = (id) => BOARDS.find((b) => b.id === id) || BOARDS[0];
+
+  // ---------- Avatar customization options ----------
+  const GENDERS = [{ id: "boy", label: "🧒 Boy" }, { id: "girl", label: "👧 Girl" }];
+  const SKINS = ["#ffe0bd", "#f3c39a", "#e0ac82", "#c68642", "#8d5524", "#5c3a1e"];
+  const HAIR_COLORS = ["#2b2b2b", "#5a3a2a", "#a8642a", "#e3b34d", "#d94f8a", "#5b8cff", "#e8e8e8"];
+  const SHIRTS = ["#ff7a3c", "#ff8fb1", "#b58cff", "#5bd1c0", "#6fc36b", "#ffd93b", "#ff5a5a", "#4aa6f5"];
+  const HAIR_STYLES = [
+    { id: "short", label: "Short" }, { id: "swoosh", label: "Swoosh" }, { id: "curly", label: "Curly" },
+    { id: "ponytail", label: "Ponytail" }, { id: "bun", label: "Bun" }, { id: "long", label: "Long" }, { id: "none", label: "Bald" },
+  ];
+  const FACES = [{ id: "happy", label: "😊" }, { id: "grin", label: "😁" }, { id: "cool", label: "😎" }];
+  function shade(hex, amt) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = Math.max(0, Math.min(255, (n >> 16) + amt));
+    const g = Math.max(0, Math.min(255, ((n >> 8) & 255) + amt));
+    const b = Math.max(0, Math.min(255, (n & 255) + amt));
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
 
   // ---------- Canvas ----------
   const canvas = document.getElementById("game");
@@ -695,6 +716,21 @@
   }
 
   // ---------- Skater ----------
+  // Cosmetic avatar fields (skin/hair/face/shirt) from the saved avatar.
+  function avatarOpts() {
+    const a = save.avatar;
+    return {
+      skin: a.skin, skinSh: shade(a.skin, -30), hair: a.hairColor, hairSh: shade(a.hairColor, -30),
+      hairStyle: a.hairStyle, gender: a.gender, face: a.face, shirt: a.shirt,
+    };
+  }
+  function rrC(c, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    c.beginPath(); c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+  }
+
   function drawSkaterRun() {
     const sk = run.skater;
     const bob = Math.sin(sk.bob) * 2;
@@ -706,76 +742,129 @@
       else if (sk.trickKind === "rail") { grind = 1; lift = Math.sin(p * Math.PI) * 20; }
       else { lift = Math.sin(p * Math.PI) * 8; } // stumble
     }
-    drawSkater(skaterPX, groundY - lift + bob, {
+    drawSkater(ctx, skaterPX, groundY - lift + bob, Object.assign({
       helmet: run.helmet, shell: run.helmetData.shell, stripe: run.helmetData.stripe,
       deck: run.boardData.deck, wheels: run.boardData.wheels, spin: spin, grind: grind,
-    });
+    }, avatarOpts()), groundY);
   }
   function drawIdleSkater() {
     const t = performance.now() / 500;
     const h = helmetById(save.helmet), b = boardById(save.board);
-    drawSkater(W * 0.5, groundY + Math.sin(t) * 2, {
+    drawSkater(ctx, W * 0.5, groundY + Math.sin(t) * 2, Object.assign({
       helmet: true, shell: h.shell, stripe: h.stripe, deck: b.deck, wheels: b.wheels, spin: 0, grind: 0,
-    });
+    }, avatarOpts()), groundY);
   }
 
-  // Draw a stylized skater. (x, y) = ground contact (board bottom).
-  function drawSkater(x, y, o) {
-    // ground shadow (stays on the ground even when the skater lifts)
-    ctx.save();
-    const lift = Math.max(0, groundY - y);
-    ctx.fillStyle = `rgba(0,0,0,${0.22 - Math.min(0.16, lift / 300)})`;
-    ctx.beginPath(); ctx.ellipse(x, groundY + 6, 30 - lift * 0.08, 6, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
+  // Draw the skater on context `c`. (x, y) = board contact; baseY = ground line for the shadow.
+  function drawSkater(c, x, y, o, baseY) {
+    if (baseY == null) baseY = groundY;
+    // ground shadow
+    const lift = Math.max(0, baseY - y);
+    c.save();
+    c.fillStyle = `rgba(0,0,0,${0.22 - Math.min(0.16, lift / 300)})`;
+    c.beginPath(); c.ellipse(x, baseY + 6, 30 - lift * 0.08, 6, 0, 0, Math.PI * 2); c.fill();
+    c.restore();
 
-    ctx.save();
-    ctx.translate(x, y);
-    if (o.spin) { ctx.translate(0, -26); ctx.rotate(o.spin); ctx.translate(0, 26); }
-    // Board: deck with rounded nose/tail + grip + trucks + wheels
-    ctx.fillStyle = o.deck; roundRect(-36, -8, 72, 11, 6); ctx.fill();
-    ctx.fillStyle = "rgba(0,0,0,0.18)"; roundRect(-34, -8, 68, 4, 3); ctx.fill(); // grip tape
-    ctx.fillStyle = "#9aa1ad"; ctx.fillRect(-24, 1, 4, 5); ctx.fillRect(20, 1, 4, 5); // trucks
-    ctx.fillStyle = o.wheels;
-    for (const wx of [-22, 22]) { ctx.beginPath(); ctx.arc(wx, 5, 5.5, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "rgba(0,0,0,0.25)"; ctx.beginPath(); ctx.arc(wx, 5, 2, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = o.wheels; }
-    // Legs (knees bent)
-    ctx.strokeStyle = "#2b3358"; ctx.lineWidth = 8; ctx.lineCap = "round";
+    c.save();
+    c.translate(x, y);
+    if (o.spin) { c.translate(0, -26); c.rotate(o.spin); c.translate(0, 26); }
+    // Board
+    c.fillStyle = o.deck; rrC(c, -36, -8, 72, 11, 6); c.fill();
+    c.fillStyle = "rgba(0,0,0,0.18)"; rrC(c, -34, -8, 68, 4, 3); c.fill();
+    c.fillStyle = "#9aa1ad"; c.fillRect(-24, 1, 4, 5); c.fillRect(20, 1, 4, 5);
+    c.fillStyle = o.wheels;
+    for (const wx of [-22, 22]) { c.beginPath(); c.arc(wx, 5, 5.5, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "rgba(0,0,0,0.25)"; c.beginPath(); c.arc(wx, 5, 2, 0, Math.PI * 2); c.fill(); c.fillStyle = o.wheels; }
+    // Legs (denim) + shoes
+    c.strokeStyle = "#2b3358"; c.lineWidth = 8; c.lineCap = "round";
     const stance = o.grind ? 17 : 12;
-    ctx.beginPath();
-    ctx.moveTo(-stance, -8); ctx.lineTo(-9, -22); ctx.lineTo(-5, -34);
-    ctx.moveTo(stance, -8); ctx.lineTo(10, -22); ctx.lineTo(8, -34); ctx.stroke();
-    // shoes
-    ctx.strokeStyle = "#e9edf4"; ctx.lineWidth = 6;
-    ctx.beginPath(); ctx.moveTo(-stance - 3, -7); ctx.lineTo(-stance + 6, -7);
-    ctx.moveTo(stance - 6, -7); ctx.lineTo(stance + 3, -7); ctx.stroke();
-    // Torso (T-shirt) with belly shading
-    ctx.strokeStyle = "#ff7a3c"; ctx.lineWidth = 15;
-    ctx.beginPath(); ctx.moveTo(1, -33); ctx.lineTo(1, -58); ctx.stroke();
-    ctx.strokeStyle = "rgba(0,0,0,0.10)"; ctx.lineWidth = 5;
-    ctx.beginPath(); ctx.moveTo(5, -34); ctx.lineTo(5, -56); ctx.stroke();
-    // Arms
-    ctx.strokeStyle = "#ffb27a"; ctx.lineWidth = 6; ctx.lineCap = "round";
-    ctx.beginPath(); ctx.moveTo(0, -52); ctx.lineTo(o.grind ? 26 : 19, -46);
-    ctx.moveTo(0, -52); ctx.lineTo(-16, -44); ctx.stroke();
-    // Neck + Head
-    ctx.fillStyle = "#ffd0a3"; ctx.beginPath(); ctx.arc(2, -68, 11.5, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "rgba(0,0,0,0.06)"; ctx.beginPath(); ctx.arc(5, -66, 9, 0, Math.PI * 2); ctx.fill();
-    // ear
-    ctx.fillStyle = "#ffc596"; ctx.beginPath(); ctx.arc(-8, -67, 3, 0, Math.PI * 2); ctx.fill();
-    // Helmet or hair
+    c.beginPath();
+    c.moveTo(-stance, -8); c.lineTo(-9, -22); c.lineTo(-5, -34);
+    c.moveTo(stance, -8); c.lineTo(10, -22); c.lineTo(8, -34); c.stroke();
+    c.strokeStyle = "#e9edf4"; c.lineWidth = 6;
+    c.beginPath(); c.moveTo(-stance - 3, -7); c.lineTo(-stance + 6, -7);
+    c.moveTo(stance - 6, -7); c.lineTo(stance + 3, -7); c.stroke();
+    // Torso (shirt color from avatar)
+    c.strokeStyle = o.shirt; c.lineWidth = 15;
+    c.beginPath(); c.moveTo(1, -33); c.lineTo(1, -58); c.stroke();
+    c.strokeStyle = "rgba(0,0,0,0.10)"; c.lineWidth = 5;
+    c.beginPath(); c.moveTo(5, -34); c.lineTo(5, -56); c.stroke();
+    // Arms (skin) + short sleeves (shirt)
+    c.strokeStyle = o.skin; c.lineWidth = 6; c.lineCap = "round";
+    c.beginPath(); c.moveTo(0, -52); c.lineTo(o.grind ? 26 : 19, -46);
+    c.moveTo(0, -52); c.lineTo(-16, -44); c.stroke();
+    c.strokeStyle = o.shirt; c.lineWidth = 7;
+    c.beginPath(); c.moveTo(-3, -54); c.lineTo(-8, -49); c.moveTo(5, -54); c.lineTo(10, -49); c.stroke();
+    // Head (skin) + ears
+    c.fillStyle = o.skin; c.beginPath(); c.arc(2, -68, 11.5, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "rgba(0,0,0,0.06)"; c.beginPath(); c.arc(5.5, -66, 8.5, 0, Math.PI * 2); c.fill();
+    c.fillStyle = o.skin; c.beginPath(); c.arc(-9.5, -67, 2.6, 0, Math.PI * 2); c.arc(13.5, -67, 2.6, 0, Math.PI * 2); c.fill();
+    // Face
+    drawSkFace(c, o);
+    // Helmet (covers hair) or hair
     if (o.helmet) {
-      ctx.fillStyle = o.shell;
-      ctx.beginPath(); ctx.arc(2, -69, 13, Math.PI, 0); ctx.fill();
-      ctx.fillRect(-11, -70, 26, 4);
-      ctx.fillStyle = "rgba(255,255,255,0.25)"; ctx.beginPath(); ctx.arc(-2, -73, 5, Math.PI, Math.PI * 1.5); ctx.fill(); // shine
-      ctx.fillStyle = o.stripe; ctx.fillRect(-2.5, -82, 5, 14);
-      ctx.fillStyle = "rgba(0,0,0,0.12)"; ctx.fillRect(-11, -62, 26, 2); // strap line
+      c.fillStyle = o.shell;
+      c.beginPath(); c.arc(2, -70, 12.5, Math.PI, 0); c.fill();
+      c.fillRect(-10.5, -71, 25, 3.5);
+      c.fillStyle = "rgba(255,255,255,0.28)"; c.beginPath(); c.arc(-2, -74, 4.5, Math.PI, Math.PI * 1.5); c.fill();
+      c.fillStyle = o.stripe; c.fillRect(-2.5, -82, 5, 13);
+      c.fillStyle = "rgba(0,0,0,0.12)"; c.fillRect(-10.5, -67.5, 25, 1.8);
     } else {
-      ctx.fillStyle = "#5a3a2a";
-      ctx.beginPath(); ctx.arc(2, -71, 11.5, Math.PI, 0); ctx.fill();
-      ctx.fillRect(-9.5, -71, 7, 5); ctx.fillRect(6, -71, 6, 6);
+      drawSkHair(c, o);
     }
-    ctx.restore();
+    c.restore();
+  }
+
+  function drawSkFace(c, o) {
+    const cool = o.face === "cool";
+    c.fillStyle = "rgba(255,130,150,0.35)";
+    c.beginPath(); c.arc(-4, -62, 2.2, 0, Math.PI * 2); c.arc(8, -62, 2.2, 0, Math.PI * 2); c.fill();
+    if (cool) {
+      c.fillStyle = "#222"; rrC(c, -8, -69.5, 7.5, 5, 2); c.fill(); rrC(c, 2.5, -69.5, 7.5, 5, 2); c.fill();
+      c.fillRect(-0.5, -68, 3, 1.6);
+      c.fillStyle = "rgba(255,255,255,0.35)"; c.fillRect(-7, -69, 2, 1.4); c.fillRect(3.5, -69, 2, 1.4);
+    } else {
+      c.strokeStyle = o.hairSh; c.lineWidth = 1.2; c.lineCap = "round";
+      c.beginPath(); c.moveTo(-4, -71); c.lineTo(-0.5, -71.4); c.moveTo(4.5, -71.4); c.lineTo(8, -71); c.stroke();
+      c.fillStyle = "#fff"; c.beginPath(); c.ellipse(-1.5, -67, 1.8, 2.2, 0, 0, Math.PI * 2); c.ellipse(5.5, -67, 1.8, 2.2, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "#33271f"; c.beginPath(); c.arc(-1.1, -66.6, 1.05, 0, Math.PI * 2); c.arc(5.9, -66.6, 1.05, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "#fff"; c.beginPath(); c.arc(-0.7, -67.3, 0.4, 0, Math.PI * 2); c.arc(6.3, -67.3, 0.4, 0, Math.PI * 2); c.fill();
+      if (o.gender === "girl") {
+        c.strokeStyle = "#33271f"; c.lineWidth = 0.8;
+        c.beginPath(); c.moveTo(-3.5, -68.3); c.lineTo(-4.8, -69.3); c.moveTo(7.5, -68.3); c.lineTo(8.8, -69.3); c.stroke();
+      }
+    }
+    c.strokeStyle = o.skinSh; c.lineWidth = 1; c.lineCap = "round";
+    c.beginPath(); c.moveTo(2, -64.5); c.lineTo(2.9, -63.6); c.stroke();
+    c.strokeStyle = o.gender === "girl" ? "#e06b80" : "#b85c5c"; c.lineWidth = 1.5;
+    if (o.face === "grin") {
+      c.fillStyle = "#fff"; c.beginPath(); c.ellipse(2.3, -60.5, 3, 2, 0, 0, Math.PI); c.fill();
+      c.beginPath(); c.arc(2.3, -61.5, 3, 0.12 * Math.PI, 0.88 * Math.PI); c.stroke();
+    } else {
+      c.beginPath(); c.arc(2.3, -62, 2.6, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke();
+    }
+  }
+
+  function drawSkHair(c, o) {
+    const hs = o.hairStyle;
+    if (hs === "none") return;
+    const H = o.hair, HS = o.hairSh;
+    if (hs === "long") { c.fillStyle = HS; c.fillRect(-13, -70, 3.6, 17); c.fillRect(11.4, -70, 3.6, 17); }
+    if (hs === "ponytail") { c.fillStyle = HS; c.save(); c.translate(15, -65); c.rotate(0.5); c.beginPath(); c.ellipse(0, 0, 4, 9, 0, 0, Math.PI * 2); c.fill(); c.restore(); }
+    if (hs === "bun") { c.fillStyle = HS; c.beginPath(); c.arc(2, -83, 4.6, 0, Math.PI * 2); c.fill(); }
+    c.fillStyle = H;
+    if (hs === "curly") {
+      for (const p of [[-8, -75, 5], [0, -79, 5.5], [8, -75, 5], [-11, -69, 4.5], [13, -69, 4.5]]) {
+        c.beginPath(); c.arc(2 + p[0], p[1], p[2], 0, Math.PI * 2); c.fill();
+      }
+    } else {
+      c.beginPath(); c.arc(2, -69, 12.5, Math.PI, 0); c.fill();
+      c.fillRect(-10.5, -70, 25, 3);
+      if (hs === "swoosh") {
+        c.beginPath(); c.moveTo(-10.5, -70); c.quadraticCurveTo(4, -62.5, 14.5, -69);
+        c.lineTo(14.5, -73); c.lineTo(-10.5, -73); c.closePath(); c.fill();
+      }
+    }
   }
 
   function drawWipeout(x, y) {
@@ -914,9 +1003,39 @@
 
   function renderGear() {
     tempHelmet = save.helmet; tempBoard = save.board;
+    buildAvChips("gender", GENDERS);
+    buildAvSwatches("skin", SKINS);
+    buildAvChips("hairStyle", HAIR_STYLES);
+    buildAvSwatches("hairColor", HAIR_COLORS);
+    buildAvSwatches("shirt", SHIRTS);
+    buildAvChips("face", FACES);
     buildGearRow("helmet-row", HELMETS, "helmet");
     buildGearRow("board-row", BOARDS, "board");
     drawGearPreview();
+  }
+  function buildAvChips(part, options) {
+    const wrap = document.querySelector(`.av-row[data-part="${part}"]`);
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    options.forEach((o) => {
+      const b = document.createElement("button");
+      b.className = "gear-chip" + (save.avatar[part] === o.id ? " selected" : "");
+      b.textContent = o.label;
+      b.addEventListener("click", () => { save.avatar[part] = o.id; persist(); renderGear(); });
+      wrap.appendChild(b);
+    });
+  }
+  function buildAvSwatches(part, colors) {
+    const wrap = document.querySelector(`.av-swatches[data-part="${part}"]`);
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    colors.forEach((col) => {
+      const b = document.createElement("button");
+      b.className = "av-swatch" + (save.avatar[part] === col ? " selected" : "");
+      b.style.background = col;
+      b.addEventListener("click", () => { save.avatar[part] = col; persist(); renderGear(); });
+      wrap.appendChild(b);
+    });
   }
   function unlocked(g) { return save.best >= g.unlockScore; }
   function buildGearRow(rowId, items, kind) {
@@ -940,23 +1059,14 @@
   function drawGearPreview() {
     gctx.clearRect(0, 0, gearCanvas.width, gearCanvas.height);
     const h = helmetById(tempHelmet), b = boardById(tempBoard);
-    // borrow the main draw by temporarily pointing ctx? simpler: mini draw
-    const sctx = ctx, sW = W, sH = H, sgy = groundY;
-    // draw into gear canvas using a lightweight inline skater
-    const g = gctx; g.save(); g.translate(110, 150); g.scale(1.4, 1.4);
-    g.fillStyle = b.deck; rr(g, -34, -8, 68, 11, 6); g.fill();
-    g.fillStyle = b.wheels; for (const wx of [-22, 22]) { g.beginPath(); g.arc(wx, 4, 5.5, 0, 6.3); g.fill(); }
-    g.strokeStyle = "#2b3358"; g.lineWidth = 8; g.lineCap = "round";
-    g.beginPath(); g.moveTo(-12, -8); g.lineTo(-6, -34); g.moveTo(12, -8); g.lineTo(8, -34); g.stroke();
-    g.strokeStyle = "#ff7a3c"; g.lineWidth = 14; g.beginPath(); g.moveTo(1, -34); g.lineTo(1, -58); g.stroke();
-    g.fillStyle = "#ffd0a3"; g.beginPath(); g.arc(2, -68, 11, 0, 6.3); g.fill();
-    g.fillStyle = h.shell; g.beginPath(); g.arc(2, -69, 12.5, Math.PI, 0); g.fill();
-    g.fillRect(-10.5, -70, 25, 4); g.fillStyle = h.stripe; g.fillRect(-2, -81, 5, 13);
-    g.restore();
-  }
-  function rr(c, x, y, w, h, r) {
-    c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r);
-    c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+    const opts = Object.assign({
+      helmet: true, shell: h.shell, stripe: h.stripe, deck: b.deck, wheels: b.wheels, spin: 0, grind: 0,
+    }, avatarOpts());
+    gctx.save();
+    gctx.translate(gearCanvas.width / 2, gearCanvas.height - 18);
+    gctx.scale(1.55, 1.55);
+    drawSkater(gctx, 0, 0, opts, 0);
+    gctx.restore();
   }
 
   // ============================================================
