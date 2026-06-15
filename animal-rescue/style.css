@@ -195,7 +195,27 @@ a.navbtn { text-decoration: none; display: inline-flex; align-items: center; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* characters */
-.cs-avatar { position: absolute; bottom: 6px; left: 7%; width: 120px; height: 150px; animation: bob 2.6s ease-in-out infinite; }
+.cs-avatar { position: absolute; bottom: 6px; left: 5%; width: 120px; height: 150px; animation: avWander 16s ease-in-out infinite; }
+@keyframes avWander {
+  0%   { transform: translateX(0) scaleX(1); }
+  42%  { transform: translateX(150px) scaleX(1); }
+  46%  { transform: translateX(150px) scaleX(-1); }
+  50%  { transform: translateX(150px) scaleX(-1); }
+  92%  { transform: translateX(0) scaleX(-1); }
+  96%  { transform: translateX(0) scaleX(1); }
+  100% { transform: translateX(0) scaleX(1); }
+}
+/* the body dances (sway + bob) while wandering */
+.cs-avatar svg { animation: avDance 1.5s ease-in-out infinite; transform-origin: 50% 92%; }
+@keyframes avDance {
+  0%, 100% { transform: translateY(0) rotate(-2.5deg); }
+  50%      { transform: translateY(-4px) rotate(2.5deg); }
+}
+.cs-avatar .avx-arm { transform-box: fill-box; transform-origin: top center; }
+.cs-avatar .avx-arm-l { animation: avArmL 1.5s ease-in-out infinite; }
+.cs-avatar .avx-arm-r { animation: avArmR 1.5s ease-in-out infinite; }
+@keyframes avArmL { 0%, 100% { transform: rotate(12deg); } 50% { transform: rotate(-16deg); } }
+@keyframes avArmR { 0%, 100% { transform: rotate(-12deg); } 50% { transform: rotate(16deg); } }
 .cs-detective { position: absolute; bottom: 8px; right: 7%; text-align: center; }
 .detective-art { width: 122px; height: 128px; margin: 0 auto; animation: bob 2.2s ease-in-out infinite; }
 .detective-name {

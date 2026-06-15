@@ -126,9 +126,8 @@
         <ellipse cx="46" cy="116" rx="6" ry="3.4" fill="${shoe}"/><ellipse cx="54" cy="116" rx="6" ry="3.4" fill="${shoe}"/>
         <path d="M37 80 Q34 73 50 73 Q66 73 63 80 L73 105 Q50 112 27 105 Z" fill="${top}"/>
         <path d="M27 105 Q50 112 73 105" stroke="${topSh}" stroke-width="2.2" fill="none"/>
-        <rect x="25.5" y="80" width="7.5" height="17" rx="3.7" fill="${top}"/>
-        <rect x="67" y="80" width="7.5" height="17" rx="3.7" fill="${top}"/>
-        <circle cx="29" cy="98" r="4.4" fill="${skin}"/><circle cx="71" cy="98" r="4.4" fill="${skin}"/>`;
+        <g class="avx-arm avx-arm-l"><rect x="25.5" y="80" width="7.5" height="17" rx="3.7" fill="${top}"/><circle cx="29" cy="98" r="4.4" fill="${skin}"/></g>
+        <g class="avx-arm avx-arm-r"><rect x="67" y="80" width="7.5" height="17" rx="3.7" fill="${top}"/><circle cx="71" cy="98" r="4.4" fill="${skin}"/></g>`;
     } else {
       body = `
         <rect x="43" y="95" width="6.6" height="21" rx="3.2" fill="${pants}"/>
@@ -136,9 +135,8 @@
         <ellipse cx="46.3" cy="117" rx="6.4" ry="3.6" fill="${shoe}"/><ellipse cx="53.7" cy="117" rx="6.4" ry="3.6" fill="${shoe}"/>
         <path d="M33 97 Q31 74 50 74 Q69 74 67 97 Q50 103 33 97 Z" fill="${top}"/>
         <path d="M44 75 Q50 80 56 75" stroke="${topSh}" stroke-width="2" fill="none"/>
-        <rect x="25" y="80" width="8" height="22" rx="4" fill="${top}"/>
-        <rect x="67" y="80" width="8" height="22" rx="4" fill="${top}"/>
-        <circle cx="29" cy="103" r="4.6" fill="${skin}"/><circle cx="71" cy="103" r="4.6" fill="${skin}"/>`;
+        <g class="avx-arm avx-arm-l"><rect x="25" y="80" width="8" height="22" rx="4" fill="${top}"/><circle cx="29" cy="103" r="4.6" fill="${skin}"/></g>
+        <g class="avx-arm avx-arm-r"><rect x="67" y="80" width="8" height="22" rx="4" fill="${top}"/><circle cx="71" cy="103" r="4.6" fill="${skin}"/></g>`;
     }
 
     // ---- face ----
@@ -285,36 +283,15 @@
   /* ============================================================
      ANIMATED CITY SCENE + DETECTIVE WHISKERS (drawn art)
      ============================================================ */
-  function buildCityArt() {
-    const W = 800, H = 240, horizon = 176, roadY = 206;
-    // far skyline
-    let far = "", x = 0, i = 0;
-    const farCols = ["#c4d9ef", "#cfe1f3"];
-    while (x < W) {
-      const w = 46 + (i * 37) % 44, h = 50 + (i * 53) % 70;
-      far += `<rect x="${x}" y="${horizon - h}" width="${w}" height="${h}" rx="3" fill="${farCols[i % 2]}"/>`;
-      x += w + 7; i++;
-    }
-    // mid buildings with lit windows
-    let mid = "", bx = 14, bi = 0;
-    const cols = ["#eab0c3", "#a9c8f0", "#f4c98a", "#bfe3a8", "#d3b6ef", "#9fd8d0"];
-    while (bx < W - 30) {
-      const bw = 78 + (bi * 29) % 46, bh = 78 + (bi * 61) % 62, by = horizon - bh, col = cols[bi % cols.length];
-      mid += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="6" fill="${col}"/>`;
-      mid += `<rect x="${bx}" y="${by}" width="${bw}" height="12" rx="6" fill="rgba(0,0,0,0.10)"/>`;
-      for (let wy = by + 22; wy < horizon - 14; wy += 26)
-        for (let wx = bx + 12; wx < bx + bw - 14; wx += 24)
-          mid += `<rect x="${wx}" y="${wy}" width="13" height="16" rx="2" fill="${(wx + wy) % 3 === 0 ? "#fff4b8" : "#dcecff"}"/>`;
-      bx += bw + 16; bi++;
-    }
-    // trees + lampposts along the sidewalk
-    let fg = "";
-    for (const tx of [70, 250, 430, 610, 770]) fg += sceneTree(tx, horizon + 6, 1);
-    for (const lx of [160, 360, 560, 720]) fg += lamp(lx, horizon + 4);
-    // sun rays
+  const SCENE_TYPES = ["street", "park", "plaza"];
+  function buildScene(type) {
+    const W = 800, H = 240, horizon = 176;
     let rays = "";
     for (let a = 0; a < 12; a++) rays += `<rect x="697" y="14" width="6" height="16" rx="3" fill="#ffe06b" transform="rotate(${a * 30} 700 46)"/>`;
-
+    let content;
+    if (type === "park") content = scenePark(W, H, horizon);
+    else if (type === "plaza") content = scenePlaza(W, H, horizon);
+    else content = sceneStreet(W, H, horizon);
     return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMax slice" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       <defs><linearGradient id="csky" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#79c2ff"/><stop offset="0.65" stop-color="#bce6ff"/><stop offset="1" stop-color="#e6f6ff"/>
@@ -322,15 +299,88 @@
       <rect width="${W}" height="${H}" fill="url(#csky)"/>
       <g class="cs-rays">${rays}</g>
       <circle cx="700" cy="46" r="28" fill="#ffe06b"/>
-      ${far}
+      ${content}
+    </svg>`;
+  }
+  function windowsGrid(x, by, w, bottom) {
+    let s = "";
+    for (let wy = by + 20; wy < bottom - 14; wy += 26)
+      for (let wx = x + 12; wx < x + w - 14; wx += 24)
+        s += `<rect x="${wx}" y="${wy}" width="13" height="16" rx="2" fill="${(wx + wy) % 3 === 0 ? "#fff4b8" : "#dcecff"}"/>`;
+    return s;
+  }
+  function parkHouse(x, baseY, color) {
+    return `<g transform="translate(${x},${baseY})">
+      <rect x="-26" y="-46" width="52" height="46" rx="3" fill="${color}"/>
+      <polygon points="-32,-46 0,-70 32,-46" fill="#c96a52"/>
+      <rect x="-8" y="-22" width="16" height="22" rx="2" fill="#7a5a3a"/>
+      <rect x="-20" y="-38" width="12" height="12" rx="2" fill="#fff3b0"/><rect x="8" y="-38" width="12" height="12" rx="2" fill="#fff3b0"/></g>`;
+  }
+  function parkBench(x, y) {
+    return `<g transform="translate(${x},${y})">
+      <rect x="-22" y="-6" width="44" height="6" rx="2" fill="#b9742e"/><rect x="-22" y="-17" width="44" height="6" rx="2" fill="#cf8a3e"/>
+      <rect x="-18" y="-6" width="4" height="12" fill="#7a4a22"/><rect x="14" y="-6" width="4" height="12" fill="#7a4a22"/></g>`;
+  }
+  function fountain(x, y) {
+    return `<g transform="translate(${x},${y})">
+      <ellipse cx="0" cy="2" rx="46" ry="13" fill="#9fd8ef"/><ellipse cx="0" cy="2" rx="46" ry="13" fill="none" stroke="#cfeaf6" stroke-width="3"/>
+      <rect x="-7" y="-30" width="14" height="32" rx="3" fill="#cdd6e0"/><ellipse cx="0" cy="-30" rx="18" ry="6" fill="#bcd6e8"/>
+      <g stroke="#bfe6f7" stroke-width="2.5" fill="none"><path d="M0 -34 Q-14 -48 -20 -30"/><path d="M0 -34 Q14 -48 20 -30"/><path d="M0 -37 L0 -30"/></g></g>`;
+  }
+
+  function sceneStreet(W, H, horizon) {
+    const roadY = 206;
+    let far = "", x = 0, i = 0; const farCols = ["#c4d9ef", "#cfe1f3"];
+    while (x < W) { const w = 46 + (i * 37) % 44, h = 50 + (i * 53) % 70; far += `<rect x="${x}" y="${horizon - h}" width="${w}" height="${h}" rx="3" fill="${farCols[i % 2]}"/>`; x += w + 7; i++; }
+    let mid = "", bx = 14, bi = 0; const cols = ["#eab0c3", "#a9c8f0", "#f4c98a", "#bfe3a8", "#d3b6ef", "#9fd8d0"];
+    while (bx < W - 30) {
+      const bw = 78 + (bi * 29) % 46, bh = 78 + (bi * 61) % 62, by = horizon - bh, col = cols[bi % cols.length];
+      mid += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="6" fill="${col}"/><rect x="${bx}" y="${by}" width="${bw}" height="12" rx="6" fill="rgba(0,0,0,0.10)"/>${windowsGrid(bx, by, bw, horizon)}`;
+      bx += bw + 16; bi++;
+    }
+    let fg = "";
+    for (const tx of [70, 250, 430, 610, 770]) fg += sceneTree(tx, horizon + 6, 1);
+    for (const lx of [160, 360, 560, 720]) fg += lamp(lx, horizon + 4);
+    return `${far}
       <rect x="0" y="${horizon - 2}" width="${W}" height="14" fill="#cdeec4"/>
       ${mid}
       <rect x="0" y="${horizon}" width="${W}" height="${H - horizon}" fill="#8ddf6e"/>
       <rect x="0" y="${roadY}" width="${W}" height="${H - roadY}" fill="#9aa4b2"/>
       <rect x="0" y="${roadY}" width="${W}" height="4" fill="#838d9c"/>
       ${dashLine(roadY + 20, W)}
-      ${fg}
-    </svg>`;
+      ${fg}`;
+  }
+
+  function scenePark(W, H, horizon) {
+    let houses = "";
+    for (const h of [[80, "#f4b3c4"], [210, "#a9c8f0"], [620, "#bfe3a8"], [730, "#f4c98a"]]) houses += parkHouse(h[0], horizon - 2, h[1]);
+    const pond = `<ellipse cx="560" cy="216" rx="125" ry="24" fill="#7fc8e8"/><ellipse cx="560" cy="216" rx="125" ry="24" fill="none" stroke="#bfe9f6" stroke-width="3"/>
+      <ellipse cx="510" cy="212" rx="11" ry="4" fill="#6fbf63"/><ellipse cx="600" cy="220" rx="9" ry="3.5" fill="#6fbf63"/>`;
+    let trees = "";
+    for (const t of [[60, 200, 1.15], [150, 192, 0.9], [330, 202, 1.2], [420, 190, 0.85], [700, 200, 1.1], [770, 192, 0.9]]) trees += sceneTree(t[0], t[1], t[2]);
+    let flowers = "";
+    for (const fx of [180, 300, 360, 250, 690]) flowers += `<g transform="translate(${fx},${horizon + 36})"><circle r="3" fill="#ff7eb6"/><circle cx="-4" cy="-3" r="3" fill="#ffd93b"/><circle cx="4" cy="-3" r="3" fill="#b58cff"/><rect x="-0.6" y="0" width="1.2" height="6" fill="#4e9c46"/></g>`;
+    return `${houses}
+      <rect x="0" y="${horizon - 2}" width="${W}" height="${H - horizon + 2}" fill="#8ddf6e"/>
+      <ellipse cx="220" cy="214" rx="180" ry="44" fill="#9be07a" opacity="0.55"/>
+      ${pond}
+      ${flowers}
+      ${parkBench(420, horizon + 36)}
+      ${trees}`;
+  }
+
+  function scenePlaza(W, H, horizon) {
+    const bL = `<rect x="-20" y="36" width="168" height="${horizon - 36}" rx="6" fill="#a9c8f0"/><rect x="-20" y="36" width="168" height="12" fill="rgba(0,0,0,0.1)"/>${windowsGrid(-20, 36, 168, horizon)}`;
+    const bR = `<rect x="${W - 148}" y="28" width="168" height="${horizon - 28}" rx="6" fill="#d3b6ef"/><rect x="${W - 148}" y="28" width="168" height="12" fill="rgba(0,0,0,0.1)"/>${windowsGrid(W - 148, 28, 168, horizon)}`;
+    let mid = "", bx = 168, bi = 0; const cols = ["#eab0c3", "#f4c98a", "#bfe3a8", "#9fd8d0"];
+    while (bx < W - 168) { const bw = 84, bh = 66 + (bi * 53) % 50, by = horizon - bh, col = cols[bi % cols.length]; mid += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="5" fill="${col}"/>${windowsGrid(bx, by, bw, horizon)}`; bx += bw + 14; bi++; }
+    let banner = `<path d="M150 62 Q400 84 650 62" stroke="#ffb3c6" stroke-width="2.5" fill="none"/>`;
+    for (let k = 0; k < 9; k++) { const fx = 165 + k * 58, dy = (k % 2) * 3, c = ["#ff8fb1", "#ffd93b", "#5bd1c0", "#b58cff"][k % 4]; banner += `<polygon points="${fx},${66 + dy} ${fx + 11},${66 + dy} ${fx + 5.5},${77 + dy}" fill="${c}"/>`; }
+    const ground = `<rect x="0" y="${horizon}" width="${W}" height="${H - horizon}" fill="#c8c1b4"/><rect x="0" y="${horizon}" width="${W}" height="4" fill="#b3ac9e"/>`;
+    let tiles = "";
+    for (let tx = 0; tx < W; tx += 60) tiles += `<rect x="${tx}" y="${horizon}" width="2" height="${H - horizon}" fill="rgba(0,0,0,0.06)"/>`;
+    const props = fountain(400, horizon + 32) + parkBench(150, horizon + 32) + parkBench(650, horizon + 32) + sceneTree(60, horizon + 8, 0.85) + sceneTree(740, horizon + 8, 0.85);
+    return `${bL}${bR}${mid}${banner}${ground}${tiles}${props}`;
   }
   function sceneTree(x, y, s) {
     return `<g transform="translate(${x},${y}) scale(${s})">
@@ -420,6 +470,8 @@
       `Clue ${rescuedCount() + 1} of ${riddles.length}`;
     document.getElementById("riddle-text").textContent = r.riddleText;
     document.getElementById("btn-hint").textContent = "Need a hint? 🔎";
+    // Vary the backdrop each clue so the city feels alive (street → park → plaza).
+    document.getElementById("city-art").innerHTML = buildScene(SCENE_TYPES[rescuedCount() % SCENE_TYPES.length]);
 
     // Build the three tap-to-answer buttons.
     currentChoices = buildChoices(r);
@@ -683,7 +735,7 @@
   /* ---------- Start where the player left off ---------- */
   function boot() {
     renderAvatarInto(document.getElementById("avatar-preview"), true);
-    document.getElementById("city-art").innerHTML = buildCityArt();
+    document.getElementById("city-art").innerHTML = buildScene("street");
     document.getElementById("detective-art").innerHTML = buildDetective();
     if (!state.started) show("title");
     else if (allDone()) show("ending");
