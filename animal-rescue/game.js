@@ -12,6 +12,7 @@
   const defaultState = () => ({
     started: false,
     avatar: {
+      gender: "boy",
       skin: "#f3c39a",
       hairStyle: "short",
       hairColor: "#5a3a2a",
@@ -37,20 +38,33 @@
   }
 
   /* ---------- Option lists for the avatar ---------- */
-  const SKINS = ["#ffe0bd", "#f3c39a", "#d99a6c", "#a86b3c", "#7a4a23"];
-  const HAIR_COLORS = ["#2b2b2b", "#5a3a2a", "#a8642a", "#e3b34d", "#d94f8a", "#5b8cff"];
-  const SHIRTS = ["#ff8fb1", "#b58cff", "#ff9f4a", "#5bd1c0", "#6fc36b", "#ffd93b"];
+  const GENDERS = [{ id: "boy", label: "🧒 Boy" }, { id: "girl", label: "👧 Girl" }];
+  const SKINS = ["#ffe0bd", "#f3c39a", "#e0ac82", "#c68642", "#8d5524", "#5c3a1e"];
+  const HAIR_COLORS = ["#2b2b2b", "#5a3a2a", "#a8642a", "#e3b34d", "#d94f8a", "#5b8cff", "#e8e8e8"];
+  const SHIRTS = ["#ff8fb1", "#b58cff", "#ff9f4a", "#5bd1c0", "#6fc36b", "#ffd93b", "#ff5a5a", "#4aa6f5"];
   const HAIR_STYLES = [
     { id: "short", label: "Short" },
+    { id: "swoosh", label: "Swoosh" },
+    { id: "curly", label: "Curly" },
+    { id: "ponytail", label: "Ponytail" },
+    { id: "bun", label: "Bun" },
     { id: "long", label: "Long" },
-    { id: "puffs", label: "Puffs" },
-    { id: "bald", label: "None" },
+    { id: "none", label: "Bald" },
   ];
   const FACES = [
     { id: "happy", label: "😊" },
     { id: "grin", label: "😁" },
     { id: "cool", label: "😎" },
   ];
+
+  // Darken/lighten a #rrggbb hex by amt (used for shading).
+  function shade(hex, amt) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = Math.max(0, Math.min(255, (n >> 16) + amt));
+    const g = Math.max(0, Math.min(255, ((n >> 8) & 255) + amt));
+    const b = Math.max(0, Math.min(255, (n & 255) + amt));
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
 
   /* ============================================================
      SCREEN NAVIGATION
@@ -86,44 +100,93 @@
      AVATAR — built from layered SVG shapes (no image files)
      ============================================================ */
   function avatarSVG(a, opts) {
-    opts = opts || {};
-    const faces = {
-      happy: '<path d="M40 72 Q50 82 60 72" stroke="#3a2a2a" stroke-width="3" fill="none" stroke-linecap="round"/>',
-      grin:  '<path d="M40 70 Q50 84 60 70 Z" fill="#fff" stroke="#3a2a2a" stroke-width="3"/>',
-      cool:  '<rect x="34" y="60" width="32" height="9" rx="4" fill="#222"/>',
-    };
-    const eyes = (a.face === "cool")
-      ? ""
-      : '<circle cx="42" cy="60" r="3.2" fill="#3a2a2a"/><circle cx="58" cy="60" r="3.2" fill="#3a2a2a"/>';
+    const skin = a.skin, hair = a.hairColor, top = a.shirt;
+    const girl = a.gender === "girl";
+    const cool = a.face === "cool";
+    const skinSh = shade(skin, -26), hairSh = shade(hair, -28), topSh = shade(top, -30);
+    const pants = "#46507a", shoe = "#2c2f47";
 
-    let hair = "";
-    if (a.hairStyle === "short") {
-      hair = `<path d="M28 52 Q50 20 72 52 Q72 40 50 34 Q28 40 28 52 Z" fill="${a.hairColor}"/>`;
-    } else if (a.hairStyle === "long") {
-      hair = `<path d="M26 50 Q50 18 74 50 L74 96 Q70 84 66 90 L66 54 Q50 30 34 54 L34 90 Q30 84 26 96 Z" fill="${a.hairColor}"/>`;
-    } else if (a.hairStyle === "puffs") {
-      hair = `<circle cx="30" cy="42" r="13" fill="${a.hairColor}"/><circle cx="70" cy="42" r="13" fill="${a.hairColor}"/><path d="M30 52 Q50 22 70 52 Q70 42 50 38 Q30 42 30 52 Z" fill="${a.hairColor}"/>`;
-    } // bald = no hair
+    // ---- back hair (behind head, over shoulders) ----
+    let backHair = "";
+    if (a.hairStyle === "long")
+      backHair = `<path d="M27 46 Q27 22 50 22 Q73 22 73 46 L77 98 Q71 92 66 96 L66 50 Q50 41 34 50 L34 96 Q29 92 23 98 Z" fill="${hairSh}"/>`;
+    else if (a.hairStyle === "ponytail")
+      backHair = `<path d="M68 34 Q90 42 86 72 Q84 88 74 90 Q84 72 80 56 Q75 42 64 40 Z" fill="${hairSh}"/><circle cx="69" cy="37" r="6.5" fill="${hair}"/>`;
+    else if (a.hairStyle === "bun")
+      backHair = `<circle cx="50" cy="19" r="12" fill="${hairSh}"/><ellipse cx="50" cy="19" rx="12" ry="12" fill="none" stroke="${shade(hair,-40)}" stroke-width="1.5"/>`;
+    else if (a.hairStyle === "curly")
+      backHair = `<g fill="${hairSh}"><circle cx="29" cy="36" r="12"/><circle cx="71" cy="36" r="12"/><circle cx="28" cy="54" r="11"/><circle cx="72" cy="54" r="11"/></g>`;
+
+    // ---- body: dress (girl) or shirt + pants (boy) ----
+    let body;
+    if (girl) {
+      body = `
+        <rect x="44" y="100" width="5.6" height="15" rx="2.8" fill="${skin}"/>
+        <rect x="50.4" y="100" width="5.6" height="15" rx="2.8" fill="${skin}"/>
+        <ellipse cx="46" cy="116" rx="6" ry="3.4" fill="${shoe}"/><ellipse cx="54" cy="116" rx="6" ry="3.4" fill="${shoe}"/>
+        <path d="M37 80 Q34 73 50 73 Q66 73 63 80 L73 105 Q50 112 27 105 Z" fill="${top}"/>
+        <path d="M27 105 Q50 112 73 105" stroke="${topSh}" stroke-width="2.2" fill="none"/>
+        <rect x="25.5" y="80" width="7.5" height="17" rx="3.7" fill="${top}"/>
+        <rect x="67" y="80" width="7.5" height="17" rx="3.7" fill="${top}"/>
+        <circle cx="29" cy="98" r="4.4" fill="${skin}"/><circle cx="71" cy="98" r="4.4" fill="${skin}"/>`;
+    } else {
+      body = `
+        <rect x="43" y="95" width="6.6" height="21" rx="3.2" fill="${pants}"/>
+        <rect x="50.4" y="95" width="6.6" height="21" rx="3.2" fill="${pants}"/>
+        <ellipse cx="46.3" cy="117" rx="6.4" ry="3.6" fill="${shoe}"/><ellipse cx="53.7" cy="117" rx="6.4" ry="3.6" fill="${shoe}"/>
+        <path d="M33 97 Q31 74 50 74 Q69 74 67 97 Q50 103 33 97 Z" fill="${top}"/>
+        <path d="M44 75 Q50 80 56 75" stroke="${topSh}" stroke-width="2" fill="none"/>
+        <rect x="25" y="80" width="8" height="22" rx="4" fill="${top}"/>
+        <rect x="67" y="80" width="8" height="22" rx="4" fill="${top}"/>
+        <circle cx="29" cy="103" r="4.6" fill="${skin}"/><circle cx="71" cy="103" r="4.6" fill="${skin}"/>`;
+    }
+
+    // ---- face ----
+    const cheeks = `<circle cx="37" cy="55" r="3.6" fill="#ff8a9a" opacity="0.4"/><circle cx="63" cy="55" r="3.6" fill="#ff8a9a" opacity="0.4"/>`;
+    const brows = cool ? "" :
+      `<path d="M37 41 Q41 39 45 41" stroke="${hairSh}" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+       <path d="M55 41 Q59 39 63 41" stroke="${hairSh}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+    const eyes = cool ? "" : `
+      <ellipse cx="42" cy="49" rx="4" ry="5" fill="#fff"/><ellipse cx="58" cy="49" rx="4" ry="5" fill="#fff"/>
+      <circle cx="42.6" cy="50" r="2.5" fill="#3a2a2a"/><circle cx="58.6" cy="50" r="2.5" fill="#3a2a2a"/>
+      <circle cx="43.5" cy="49" r="0.9" fill="#fff"/><circle cx="59.5" cy="49" r="0.9" fill="#fff"/>
+      ${girl ? '<path d="M37.6 46.5 L35.4 45 M38 49 L35.8 49" stroke="#3a2a2a" stroke-width="1.2" stroke-linecap="round"/><path d="M62.4 46.5 L64.6 45 M62 49 L64.2 49" stroke="#3a2a2a" stroke-width="1.2" stroke-linecap="round"/>' : ''}`;
+    const sunglasses = cool ?
+      `<rect x="34" y="44" width="13" height="10" rx="3.5" fill="#222"/><rect x="53" y="44" width="13" height="10" rx="3.5" fill="#222"/>
+       <rect x="47" y="47" width="6" height="2.6" fill="#222"/>
+       <path d="M37 47 Q40 49 44 47" stroke="#5a6172" stroke-width="1.2" fill="none"/>` : "";
+    const nose = `<path d="M49 53 Q50 56 51.5 53.5" stroke="${skinSh}" stroke-width="1.5" fill="none" stroke-linecap="round"/>`;
+    const lip = girl ? "#e06b80" : "#b85c5c";
+    const mouths = {
+      happy: `<path d="M44 60 Q50 65 56 60" stroke="${lip}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
+      grin: `<path d="M44.5 60 Q50 67 55.5 60 Z" fill="#fff" stroke="${lip}" stroke-width="2" stroke-linejoin="round"/>`,
+      cool: `<path d="M45 61 Q50 64.5 55 61" stroke="${lip}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
+    };
+
+    // ---- front hair (top / fringe) ----
+    let frontHair = "";
+    if (a.hairStyle === "short")
+      frontHair = `<path d="M28 50 Q28 24 50 24 Q72 24 72 50 Q70 39 61 35 Q56 39 50 37 Q44 39 39 35 Q30 39 28 50 Z" fill="${hair}"/>`;
+    else if (a.hairStyle === "swoosh")
+      frontHair = `<path d="M28 50 Q28 24 50 24 Q72 24 72 46 Q65 33 47 35 Q39 36 36 43 Q33 39 28 50 Z" fill="${hair}"/>`;
+    else if (a.hairStyle === "curly")
+      frontHair = `<g fill="${hair}"><circle cx="37" cy="30" r="10"/><circle cx="51" cy="27" r="11"/><circle cx="64" cy="31" r="9.5"/></g>`;
+    else if (a.hairStyle === "ponytail" || a.hairStyle === "bun" || a.hairStyle === "long")
+      frontHair = `<path d="M28 50 Q28 24 50 24 Q72 24 72 50 Q70 38 50 38 Q43 38 39 43 Q34 39 28 50 Z" fill="${hair}"/>
+        <path d="M50 25 L50 38" stroke="${hairSh}" stroke-width="1.4"/>`;
+    // none = no hair
 
     return `
       <svg viewBox="0 0 100 130" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-        <!-- shadow -->
-        <ellipse cx="50" cy="126" rx="26" ry="5" fill="rgba(0,0,0,0.12)"/>
-        <!-- legs -->
-        <rect x="40" y="104" width="8" height="20" rx="4" fill="#3a3a4a"/>
-        <rect x="52" y="104" width="8" height="20" rx="4" fill="#3a3a4a"/>
-        <!-- body / shirt -->
-        <path d="M30 92 Q30 74 50 74 Q70 74 70 92 L70 108 Q50 114 30 108 Z" fill="${a.shirt}"/>
-        <!-- arms -->
-        <rect x="22" y="78" width="9" height="28" rx="4.5" fill="${a.shirt}"/>
-        <rect x="69" y="78" width="9" height="28" rx="4.5" fill="${a.shirt}"/>
-        <circle cx="26.5" cy="106" r="5" fill="${a.skin}"/>
-        <circle cx="73.5" cy="106" r="5" fill="${a.skin}"/>
-        <!-- head -->
-        <circle cx="50" cy="56" r="24" fill="${a.skin}"/>
-        ${eyes}
-        ${faces[a.face] || faces.happy}
-        ${hair}
+        <ellipse cx="50" cy="125" rx="25" ry="4.5" fill="rgba(0,0,0,0.12)"/>
+        ${body}
+        ${backHair}
+        <rect x="46" y="66" width="8" height="11" rx="3" fill="${skin}"/>
+        <circle cx="50" cy="48" r="22" fill="${skin}"/>
+        <path d="M31 53 Q50 68 69 53 Q66 64 50 65 Q34 64 31 53 Z" fill="${skinSh}" opacity="0.22"/>
+        <circle cx="29.5" cy="50" r="4.4" fill="${skin}"/><circle cx="70.5" cy="50" r="4.4" fill="${skin}"/>
+        ${cheeks}${brows}${eyes}${sunglasses}${nose}${mouths[a.face] || mouths.happy}
+        ${frontHair}
       </svg>`;
   }
 
@@ -134,6 +197,7 @@
   function renderAvatar() {
     renderAvatarInto(document.getElementById("avatar-preview"), true);
 
+    buildChips("gender", GENDERS);
     buildSwatches("skin", SKINS);
     buildSwatches("hairColor", HAIR_COLORS);
     buildSwatches("shirt", SHIRTS);
