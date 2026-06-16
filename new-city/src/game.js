@@ -28,6 +28,7 @@
     selectedBlock: 'wall',
     decorItems: [],
     room: 'kitchen',
+    insideView: false,        // peek inside the house while decorating
     paintMode: 'item',
     itemColor: '#d9c7a8',
     selectedItem: null,
@@ -38,7 +39,17 @@
 
   // ---- DOM refs ----------------------------------------------------------
   let elCreator, elGameUI, elToolbar, elStatus, elProgress, elProgressFill,
-      elDialog, elHelpTip, elConfetti, elCelebrate, elDayIcon, elHouseCount;
+      elDialog, elHowto, elConfetti, elCelebrate, elDayIcon, elHouseCount;
+
+  // Always-visible, step-by-step instructions for each phase.
+  const INSTRUCT = {
+    permission: 'Tap “Ask nicely”, then “Smash time!” to start on this house.',
+    demolish: 'Tap the house blocks to smash them with your super hands — smash them all!',
+    clean: 'Tap the rubble to sweep it up. Fill the bar to 100% to clear the lot.',
+    build: 'Pick a block, then tap the glowing grid to stack it. Tap a block to remove it. In a hurry? Tap 🏠 Quick House, then Done.',
+    decorate: 'You’re looking inside! Pick a room and a piece of furniture, then tap the floor to place it. Use the colour dots to paint. Tap a piece to remove it.',
+    movein: 'Your new idol neighbour is moving in — give a wave! Tap “Next lot →” to build the next house.',
+  };
 
   function $(id) { return document.getElementById(id); }
 
@@ -50,7 +61,7 @@
     elProgress = $('progressWrap');
     elProgressFill = $('progressFill');
     elDialog = $('dialog');
-    elHelpTip = $('helpTip');
+    elHowto = $('howto');
     elConfetti = $('confetti');
     elCelebrate = $('celebrate');
     elDayIcon = $('dayIcon');
@@ -158,6 +169,7 @@
   function enterPermission() {
     state.phase = 'permission';
     setStatus('Ask the neighbour');
+    setInstruction('permission');
     renderToolbar();
     showDialog(
       `Can I rebuild your old house and make it fancy?`,
@@ -179,8 +191,8 @@
   function enterDemolish() {
     state.phase = 'demolish';
     setStatus('Smash the house!');
+    setInstruction('demolish');
     renderToolbar();
-    flashHelp(D.HELP.demolish);
   }
 
   function smashBlock(mesh) {
@@ -199,8 +211,8 @@
   function enterClean() {
     state.phase = 'clean';
     setStatus('Sweep the rubble');
+    setInstruction('clean');
     renderToolbar();
-    flashHelp(D.HELP.clean);
 
     // scatter rubble across the lot
     state.rubble = [];
@@ -239,7 +251,7 @@
     state.phase = 'build';
     setStatus('Build a new house');
     hideProgress();
-    flashHelp(D.HELP.build);
+    setInstruction('build');
 
     // a fresh green buildable platform
     const plat = World.makeBox(GRID + 0.4, 0.1, GRID + 0.4, '#8ad06a');
@@ -336,15 +348,32 @@
   }
 
   /* ================= PHASE: DECORATE ================= */
+  // Reveal the interior: hide the roof and fade the walls so furniture shows.
+  function applyInsideView(on) {
+    state.insideView = on;
+    state.buildBlocks.forEach((b) => {
+      const kind = b.userData.kind;
+      if (kind === 'roof') {
+        b.visible = !on;
+      } else if (kind === 'wall' || kind === 'window' || kind === 'door') {
+        b.material.transparent = on;
+        b.material.opacity = on ? 0.22 : 1;
+        b.material.depthWrite = !on;
+        b.material.needsUpdate = true;
+      }
+    });
+  }
+
   function enterDecorate() {
     state.phase = 'decorate';
     setStatus('Decorate the rooms');
-    flashHelp(D.HELP.decorate);
     // clear the build grid tiles but keep them for furniture placement
     state.room = 'kitchen';
     state.selectedItem = D.ROOMS.kitchen.items[0];
     state.itemColor = state.selectedItem.hex;
     state.paintMode = 'item';
+    applyInsideView(true);     // start by peeking inside so placing furniture is easy
+    setInstruction('decorate');
     renderToolbar();
   }
 
@@ -377,8 +406,9 @@
   function enterMoveIn() {
     state.phase = 'movein';
     setStatus('Moving in!');
+    applyInsideView(false);    // close the house back up so it looks finished
+    setInstruction('movein');
     renderToolbar();
-    flashHelp(D.HELP.movein);
 
     // tidy the build helpers
     state.baseTiles.forEach((t) => World.remove(t));
@@ -483,6 +513,13 @@
       elToolbar.appendChild(mkBtn('🏠 Quick House', 'btn-soft', quickHouse));
       elToolbar.appendChild(mkBtn('Done →', 'btn-done', () => { Sound.play('done'); enterDecorate(); }));
     } else if (state.phase === 'decorate') {
+      // peek inside / look outside toggle
+      elToolbar.appendChild(mkBtn(
+        state.insideView ? '👁 Peeking inside' : '🏠 Looking outside',
+        'btn-soft',
+        () => { applyInsideView(!state.insideView); Sound.play('tab'); renderToolbar(); }
+      ));
+      elToolbar.appendChild(sep());
       // room tabs
       Object.keys(D.ROOMS).forEach((key) => {
         const r = D.ROOMS[key];
@@ -568,19 +605,19 @@
   }
   function hideCelebrate() { elCelebrate.classList.add('hidden'); }
 
-  let helpTimer = null;
-  function flashHelp(txt) {
-    elHelpTip.textContent = '💡 ' + txt;
-    elHelpTip.classList.remove('hidden');
-    clearTimeout(helpTimer);
-    helpTimer = setTimeout(() => elHelpTip.classList.add('hidden'), 4200);
+  // Persistent instructions bar: shows what to do in the current phase,
+  // plus a steady reminder of the camera controls.
+  function setInstruction(phaseKey) {
+    const step = INSTRUCT[phaseKey] || 'Tap around and have fun!';
+    elHowto.innerHTML =
+      `<span class="howto-step">💡 ${step}</span>` +
+      `<span class="howto-controls">🖐 drag to spin · 🔍 pinch / scroll to zoom · 👆 tap to act</span>`;
+    elHowto.classList.remove('hidden');
   }
+  // The ❓ button simply shows/hides the instructions bar.
   function showHelp() {
-    const map = {
-      permission: D.HELP.permission, demolish: D.HELP.demolish, clean: D.HELP.clean,
-      build: D.HELP.build, decorate: D.HELP.decorate, movein: D.HELP.movein,
-    };
-    flashHelp(map[state.phase] || 'Tap around and have fun!');
+    elHowto.classList.toggle('hidden');
+    Sound.play('tab');
   }
 
   function confettiBurst() {
