@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>New City — Build a Voxel Town</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- The 3D world is drawn here, behind everything else -->
+  <canvas id="scene"></canvas>
+
+  <!-- Avatar / wardrobe creator (shown first) -->
+  <div id="creatorScreen" class="screen">
+    <div class="creator-header">
+      <h1>✨ Make Your Idol ✨</h1>
+      <p>Dress up your super-strong hero, then go build a brand-new city!</p>
+    </div>
+  </div>
+
+  <!-- In-game UI overlay (hidden until the avatar is done) -->
+  <div id="gameUI" class="hidden">
+    <div class="status-bar">
+      <span id="dayIcon" class="day-icon">☀️</span>
+      <span id="phaseLabel" class="phase-label">Smash the house!</span>
+      <span class="houses">🏠 <span id="houseCount">0</span></span>
+      <span class="spacer"></span>
+      <button id="helpBtn" class="icon-btn" title="Help">❓</button>
+      <button id="muteBtn" class="icon-btn" title="Sound on/off">🔊</button>
+    </div>
+
+    <div id="helpTip" class="help-tip hidden"></div>
+
+    <div id="progressWrap" class="progress-wrap hidden">
+      <div class="progress-label">Clean: 0%</div>
+      <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+    </div>
+
+    <div id="dialog" class="dialog hidden">
+      <div class="dialog-bubble">
+        <div class="dialog-text"></div>
+        <div class="dialog-buttons"></div>
+      </div>
+    </div>
+
+    <div id="celebrate" class="celebrate hidden">
+      <div class="celebrate-title">🎉 Welcome home! 🎉</div>
+      <div class="celebrate-sub"></div>
+    </div>
+
+    <div id="toolbar" class="toolbar"></div>
+  </div>
+
+  <div id="confetti" class="confetti"></div>
+
+  <!-- Three.js r128 (UMD build) — works straight from a file:// open, no server needed -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- game code -->
+  <script src="src/data.js"></script>
+  <script src="src/sound.js"></script>
+  <script src="src/avatar.js"></script>
+  <script src="src/world.js"></script>
+  <script src="src/game.js"></script>
+</body>
+</html>
