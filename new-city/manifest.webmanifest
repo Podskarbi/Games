@@ -1,0 +1,16 @@
+{
+  "name": "New City — Build a Town",
+  "short_name": "New City",
+  "description": "Smash old houses, build new ones and decorate a voxel city of idols!",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#aee6ff",
+  "theme_color": "#7a4cff",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
