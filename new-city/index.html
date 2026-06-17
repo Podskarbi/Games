@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon-192.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="style.css?v=20260617b" />
+  <link rel="stylesheet" href="style.css?v=20260617c" />
 </head>
 <body>
   <!-- The 3D world is drawn here, behind everything else -->
@@ -24,13 +24,15 @@
       <h1>✨ Make Your Idol ✨</h1>
       <p>Dress up your super-strong hero, then go build a brand-new city!</p>
       <button id="lang-toggle-title" class="icon-btn lang-toggle" type="button" title="Change language">PL</button>
-      <div class="creator-version">v2 · 17 Jun</div>
+      <a class="linkbtn exit-link" href="../">⬅️ Exit to games</a>
+      <div class="creator-version">v3 · 17 Jun · Exit added</div>
     </div>
   </div>
 
   <!-- In-game UI overlay (hidden until the avatar is done) -->
   <div id="gameUI" class="hidden">
     <div class="status-bar">
+      <a class="icon-btn exit-btn" href="../" title="Exit to games">⬅️</a>
       <span id="dayIcon" class="day-icon">☀️</span>
       <span id="phaseLabel" class="phase-label">Smash the house!</span>
       <span class="houses">🏠 <span id="houseCount">0</span></span>
@@ -67,10 +69,10 @@
   <!-- Three.js r128 (UMD build) — bundled locally so the game works offline and inside the iOS app -->
   <script src="vendor/three.min.js"></script>
   <!-- game code (bump ?v= on each release to bust the browser cache) -->
-  <script src="src/data.js?v=20260617b"></script>
-  <script src="src/sound.js?v=20260617b"></script>
-  <script src="src/avatar.js?v=20260617b"></script>
-  <script src="src/world.js?v=20260617b"></script>
-  <script src="src/game.js?v=20260617b"></script>
+  <script src="src/data.js?v=20260617c"></script>
+  <script src="src/sound.js?v=20260617c"></script>
+  <script src="src/avatar.js?v=20260617c"></script>
+  <script src="src/world.js?v=20260617c"></script>
+  <script src="src/game.js?v=20260617c"></script>
 </body>
 </html>
