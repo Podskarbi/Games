@@ -246,8 +246,8 @@
     }
   }
 
-  // Gravity step for tumbling bricks; lands them on the highest brick still
-  // standing in their column, or on the ground.
+  // Gravity step for tumbling bricks; they shatter when they hit the highest
+  // brick still standing in their column, or the ground.
   function updateFalling(dt) {
     if (!state.house || state.falling.length === 0) return;
     for (let i = state.falling.length - 1; i >= 0; i--) {
@@ -263,13 +263,19 @@
         }
       });
       if (b.position.y <= restY) {
+        // shatter on impact instead of piling up
         b.position.y = restY;
-        b.rotation.set(0, 0, 0);
-        b.userData.vy = 0;
-        b.userData.falling = false;
-        b.userData.gy = Math.round(restY - 0.5);
-        World.poof(b.position, '#' + b.material.color.getHexString(), 4);
+        World.poof(b.position, '#' + b.material.color.getHexString(), 8);
+        Sound.play('smash');
+        state.house.group.remove(b);
+        World.remove(b);
+        state.house.blocks = state.house.blocks.filter((x) => x !== b);
         state.falling.splice(i, 1);
+        if (state.house.blocks.length === 0) {
+          World.remove(state.house.group);
+          enterClean();
+          return;
+        }
       }
     }
   }
