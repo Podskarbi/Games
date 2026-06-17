@@ -39,6 +39,7 @@ html, body {
 .creator-header h1 { margin: 0; font-size: 30px; text-shadow: 0 2px 0 rgba(0,0,0,0.2); }
 .creator-header p { margin: 4px 0 0; opacity: 0.92; font-size: 15px; }
 .creator-header .lang-toggle { margin-top: 8px; }
+.creator-version { margin-top: 6px; font-size: 12px; font-weight: 700; color: #ffe14d; opacity: 0.9; letter-spacing: 0.5px; }
 
 .creator {
   display: flex; gap: 16px; width: 100%; max-width: 900px;

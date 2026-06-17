@@ -126,9 +126,16 @@ window.Avatar = (function () {
     const handY = 222;
     parts.push(`<rect x="86" y="156" width="14" height="68" rx="7" fill="${skin}"/>`);
     parts.push(`<rect x="160" y="156" width="14" height="68" rx="7" fill="${skin}"/>`);
+    // soft inner-arm shading for a rounder look
+    parts.push(`<rect x="95" y="156" width="5" height="68" rx="2" fill="${shade(skin, -18)}" opacity="0.5"/>`);
+    parts.push(`<rect x="160" y="156" width="5" height="68" rx="2" fill="${shade(skin, -18)}" opacity="0.5"/>`);
     if (a.accessories.gloves) {
       parts.push(`<rect x="86" y="${handY - 18}" width="14" height="18" rx="6" fill="#23232b"/>`);
       parts.push(`<rect x="160" y="${handY - 18}" width="14" height="18" rx="6" fill="#23232b"/>`);
+    } else {
+      // bare hands
+      parts.push(`<circle cx="93" cy="${handY + 2}" r="8" fill="${skin}"/>`);
+      parts.push(`<circle cx="167" cy="${handY + 2}" r="8" fill="${skin}"/>`);
     }
     if (a.accessories.armbands) {
       parts.push(`<rect x="84" y="176" width="18" height="6" fill="${aura || '#ff5fb0'}"/>`);
@@ -149,7 +156,10 @@ window.Avatar = (function () {
 
     // --- neck + head ---
     parts.push(`<rect x="124" y="120" width="12" height="18" fill="${skin}"/>`);
+    parts.push(`<rect x="124" y="120" width="12" height="5" fill="${shade(skin, -22)}" opacity="0.5"/>`); // neck shadow
     parts.push(`<circle cx="130" cy="104" r="30" fill="${skin}"/>`);
+    parts.push(`<path d="M150 90 a30 30 0 0 1 -2 34 q14 -18 2 -34 Z" fill="${shade(skin, -16)}" opacity="0.45"/>`); // cheek shading
+    parts.push(`<ellipse cx="118" cy="98" rx="9" ry="11" fill="#fff" opacity="0.12"/>`); // forehead highlight
 
     // --- accessories: choker / earrings ---
     if (a.accessories.choker) parts.push(`<rect x="116" y="128" width="28" height="6" rx="3" fill="#23232b"/>`);
@@ -160,14 +170,27 @@ window.Avatar = (function () {
     if (a.accessories.belt) parts.push(`<rect x="100" y="212" width="60" height="7" rx="3" fill="#23232b"/>`);
 
     // --- face ---
-    parts.push(`<circle cx="120" cy="104" r="4" fill="#fff"/>`);
-    parts.push(`<circle cx="120" cy="104" r="2.4" fill="${eye}"/>`);
+    const brow = shade(hair.hex, -25);
+    // eyebrows
+    parts.push(`<path d="M113 94 q7 -3 14 0" stroke="${brow}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`);
+    parts.push(`<path d="M133 94 q7 -3 14 0" stroke="${brow}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`);
+    // left eye (open) with lashes + highlight
+    parts.push(`<ellipse cx="120" cy="104" rx="4.4" ry="5" fill="#fff"/>`);
+    parts.push(`<circle cx="120" cy="104" r="2.6" fill="${eye}"/>`);
+    parts.push(`<circle cx="120" cy="104" r="1.1" fill="#1a1a1f"/>`);
+    parts.push(`<circle cx="118.7" cy="102.6" r="0.9" fill="#fff"/>`);
+    parts.push(`<path d="M114 100 q6 -3 12 -1" stroke="#2b2b33" stroke-width="1.6" fill="none" stroke-linecap="round"/>`);
     if (a.face.expression === 'wink') {
-      parts.push(`<path d="M134 104 q6 -4 12 0" stroke="#2b2b33" stroke-width="2.4" fill="none"/>`);
+      parts.push(`<path d="M134 105 q6 -4 12 0" stroke="#2b2b33" stroke-width="2.6" fill="none" stroke-linecap="round"/>`);
     } else {
-      parts.push(`<circle cx="140" cy="104" r="4" fill="#fff"/>`);
-      parts.push(`<circle cx="140" cy="104" r="2.4" fill="${eye}"/>`);
+      parts.push(`<ellipse cx="140" cy="104" rx="4.4" ry="5" fill="#fff"/>`);
+      parts.push(`<circle cx="140" cy="104" r="2.6" fill="${eye}"/>`);
+      parts.push(`<circle cx="140" cy="104" r="1.1" fill="#1a1a1f"/>`);
+      parts.push(`<circle cx="138.7" cy="102.6" r="0.9" fill="#fff"/>`);
+      parts.push(`<path d="M134 100 q6 -3 12 -1" stroke="#2b2b33" stroke-width="1.6" fill="none" stroke-linecap="round"/>`);
     }
+    // nose
+    parts.push(`<path d="M130 106 l-2.5 6 q2.5 2 5 0 Z" fill="${shade(skin, -20)}" opacity="0.55"/>`);
     // blush
     parts.push(`<circle cx="111" cy="114" r="4" fill="#ff9bbd" opacity="0.5"/>`);
     parts.push(`<circle cx="149" cy="114" r="4" fill="#ff9bbd" opacity="0.5"/>`);
