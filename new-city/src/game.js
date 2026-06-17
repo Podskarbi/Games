@@ -22,6 +22,7 @@
     lot: 0,
     lotX: 0,
     house: null,              // { group, blocks:[] } currently being demolished
+    falling: [],              // demolition bricks tumbling under gravity
     rubble: [],               // active rubble meshes
     rubbleTotal: 0,
     gridSize: DEFAULT_GRID,   // current build grid is gridSize x gridSize
@@ -131,6 +132,7 @@
       const b = World.makeBlock(1, hex);
       b.position.set(cx + x, y + 0.5, cz + z);
       b.userData.smashable = true;
+      b.userData.gx = x; b.userData.gy = y; b.userData.gz = z;   // grid coords for physics
       group.add(b); blocks.push(b);
       return b;
     }
@@ -150,6 +152,16 @@
     // roof cap
     offs.forEach((x) => offs.forEach((z) => put(x, 4, z, roof)));
 
+    // record which bricks actually rested on something at build time — only
+    // those collapse when their support is smashed (so the roof cap, built
+    // floating over the open interior, isn't yanked down the moment you start).
+    const present = new Set(blocks.map(brickKey));
+    blocks.forEach((b) => {
+      b.userData.hadSupport = (b.userData.gy === 0) ||
+        present.has(b.userData.gx + ',' + (b.userData.gy - 1) + ',' + b.userData.gz);
+    });
+
+    state.falling = [];
     group.userData.cx = cx;
     World.add(group);
     state.house = { group, blocks };
@@ -200,9 +212,65 @@
     state.house.group.remove(mesh);
     World.remove(mesh);
     state.house.blocks = state.house.blocks.filter((b) => b !== mesh);
+    state.falling = state.falling.filter((b) => b !== mesh);
     if (state.house.blocks.length === 0) {
       World.remove(state.house.group);
       enterClean();
+      return;
+    }
+    settleHouse();   // anything left unsupported now tumbles down
+  }
+
+  function brickKey(b) { return b.userData.gx + ',' + b.userData.gy + ',' + b.userData.gz; }
+
+  // Mark every brick that lost the brick directly beneath it as falling.
+  // Iterates so a collapsing column cascades upward.
+  function settleHouse() {
+    if (!state.house) return;
+    const present = new Set();
+    state.house.blocks.forEach((b) => { if (!b.userData.falling) present.add(brickKey(b)); });
+    let changed = true;
+    while (changed) {
+      changed = false;
+      state.house.blocks.forEach((b) => {
+        if (b.userData.falling || b.userData.gy <= 0 || !b.userData.hadSupport) return;
+        const below = b.userData.gx + ',' + (b.userData.gy - 1) + ',' + b.userData.gz;
+        if (!present.has(below)) {
+          b.userData.falling = true;
+          b.userData.vy = 0;
+          present.delete(brickKey(b));
+          state.falling.push(b);
+          changed = true;
+        }
+      });
+    }
+  }
+
+  // Gravity step for tumbling bricks; lands them on the highest brick still
+  // standing in their column, or on the ground.
+  function updateFalling(dt) {
+    if (!state.house || state.falling.length === 0) return;
+    for (let i = state.falling.length - 1; i >= 0; i--) {
+      const b = state.falling[i];
+      b.userData.vy -= 16 * dt;
+      b.position.y += b.userData.vy * dt;
+      b.rotation.x += dt * 3; b.rotation.z += dt * 2;
+      let restY = 0.5;   // ground
+      state.house.blocks.forEach((o) => {
+        if (o === b || o.userData.falling) return;
+        if (o.userData.gx === b.userData.gx && o.userData.gz === b.userData.gz && o.position.y < b.position.y) {
+          restY = Math.max(restY, o.position.y + 1);
+        }
+      });
+      if (b.position.y <= restY) {
+        b.position.y = restY;
+        b.rotation.set(0, 0, 0);
+        b.userData.vy = 0;
+        b.userData.falling = false;
+        b.userData.gy = Math.round(restY - 0.5);
+        World.poof(b.position, '#' + b.material.color.getHexString(), 4);
+        state.falling.splice(i, 1);
+      }
     }
   }
 
@@ -445,6 +513,7 @@
   function setRoomView(key) {
     state.roomView = key;
     applyInsideView(true);     // always look inside while decorating
+    applyRoomVisibility();     // hide the other rooms when focused on one
     if (key === 'all') {
       state.baseTiles.forEach((t) => { t.visible = true; t.material.opacity = 0.18; });
       World.focusOn(state.lotX, 0, state.gridSize + 7);
@@ -455,14 +524,32 @@
     state.baseTiles.forEach((t) => {
       const c = t.userData.col;
       t.visible = inQuadrant(q, c.i, c.j);
-      t.material.opacity = 0.34;
+      t.material.opacity = 0.4;
     });
     const w = colWorld((q.i0 + q.i1 - 1) / 2, (q.j0 + q.j1 - 1) / 2);
-    World.focusOn(w.x, w.z, Math.max(6, state.gridSize * 0.5 + 4));
+    World.focusOn(w.x, w.z, Math.max(5.5, state.gridSize * 0.42 + 3.5));
     // match the furniture palette to the room being decorated
     state.room = key;
     state.selectedItem = D.ROOMS[key].items[0];
     state.itemColor = state.selectedItem.hex;
+  }
+
+  // Show only the focused room's blocks + furniture (whole house shows all).
+  function applyRoomVisibility() {
+    const all = state.roomView === 'all';
+    const q = all ? null : quadrantOf(state.roomView);
+    state.buildBlocks.forEach((b) => {
+      if (b.userData.kind === 'roof') { b.visible = false; return; }  // inside view while decorating
+      const show = all || inQuadrant(q, b.userData.col.i, b.userData.col.j);
+      b.visible = show;
+      // frame the focused room a little more solidly than the whole-house fade
+      if (show && !all && (b.userData.kind === 'wall' || b.userData.kind === 'window' || b.userData.kind === 'door')) {
+        eachMesh(b, (m) => { m.material.opacity = 0.5; });
+      }
+    });
+    state.decorItems.forEach((d) => {
+      d.visible = all || (d.userData.col && inQuadrant(q, d.userData.col.i, d.userData.col.j));
+    });
   }
 
   function placeFurniture(i, j) {
@@ -471,10 +558,11 @@
     if (state.roomView !== 'all' && !inQuadrant(quadrantOf(state.roomView), i, j)) return;
     const it = state.selectedItem;
     const w = colWorld(i, j);
-    const m = World.makeBox(it.size[0], it.size[1], it.size[2], state.itemColor);
-    // rest the piece on the floor surface so it isn't buried in the floor block
-    m.position.set(w.x, floorTopAt(i, j) + it.size[1] / 2, w.z);
+    const m = World.makeFurniture(it.id, state.itemColor);
+    // models stand on y=0, so place the group on the floor surface
+    m.position.set(w.x, floorTopAt(i, j), w.z);
     m.userData.furniture = true;
+    m.userData.col = { i, j };
     World.add(m);
     state.decorItems.push(m);
     Sound.play('place');
@@ -492,9 +580,15 @@
     return top;
   }
 
-  function removeFurniture(mesh) {
-    World.remove(mesh);
-    state.decorItems = state.decorItems.filter((d) => d !== mesh);
+  // Climb from a raycast hit (a child cube) to the furniture group in decorItems.
+  function furnitureRoot(obj) {
+    while (obj && state.decorItems.indexOf(obj) === -1) obj = obj.parent;
+    return obj;
+  }
+
+  function removeFurniture(group) {
+    World.remove(group);
+    state.decorItems = state.decorItems.filter((d) => d !== group);
     Sound.play('remove');
   }
 
@@ -509,6 +603,9 @@
   function enterMoveIn() {
     state.phase = 'movein';
     setStatus(D.t('statuses.movein'));
+    // make sure nothing stayed hidden from a single-room view
+    state.buildBlocks.forEach((b) => { b.visible = true; });
+    state.decorItems.forEach((d) => { d.visible = true; });
     applyInsideView(false);    // close the house back up so it looks finished
     state.roomView = 'all';
     World.focusOn(state.lotX, 0, state.gridSize + 8);   // pull back to admire the whole house
@@ -600,7 +697,7 @@
       }
       case 'decorate': {
         const fHit = World.intersect(ev, state.decorItems);
-        if (fHit.length) { removeFurniture(fHit[0].object); break; }
+        if (fHit.length) { const root = furnitureRoot(fHit[0].object); if (root) { removeFurniture(root); break; } }
         const tileHit = World.intersect(ev, state.baseTiles);
         if (tileHit.length) { const c = tileHit[0].object.userData.col; placeFurniture(c.i, c.j); }
         break;
@@ -785,6 +882,7 @@
       a.t += dt;
       if (a.fn(a.t)) state.anims.splice(i, 1);
     }
+    updateFalling(dt);   // demolition bricks tumbling under gravity
     // idle bob + aura pulse for the player
     if (state.player) {
       const tt = performance.now() / 1000;

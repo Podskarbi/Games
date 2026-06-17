@@ -328,6 +328,110 @@ window.World = (function () {
     return g;
   }
 
+  // nudge a hex colour lighter (+) or darker (-)
+  function shadeHex(hex, amt) {
+    const n = parseInt(hex.replace('#', ''), 16);
+    const cl = (v) => Math.max(0, Math.min(255, v));
+    const r = cl(((n >> 16) & 255) + amt), gg = cl(((n >> 8) & 255) + amt), b = cl((n & 255) + amt);
+    return '#' + ((1 << 24) + (r << 16) + (gg << 8) + b).toString(16).slice(1);
+  }
+
+  /* ---------------- furniture models ----------------
+     Each decorate item becomes a recognisable little model built from
+     cubes, tinted by the chosen colour. Models stand on y=0 (the floor),
+     so game.js positions the group at the floor surface. */
+  function makeFurniture(id, hex) {
+    const g = new THREE.Group();
+    const dark = shadeHex(hex, -45), light = shadeHex(hex, 35), metal = '#c9d3da';
+    const put = (w, h, d, c, x, y, z) => { const m = makeBox(w, h, d, c); m.position.set(x, y, z); g.add(m); return m; };
+    const legs = (w, z0, topY, c) => {
+      [[-w, -z0], [w, -z0], [-w, z0], [w, z0]].forEach(([x, z]) => put(0.07, topY, 0.07, c, x, topY / 2, z));
+    };
+    switch (id) {
+      /* ---- kitchen ---- */
+      case 'counter':
+        put(0.9, 0.78, 0.55, hex, 0, 0.39, 0); put(0.96, 0.08, 0.6, light, 0, 0.82, 0); break;
+      case 'sink':
+        put(0.85, 0.78, 0.55, hex, 0, 0.39, 0); put(0.9, 0.08, 0.6, light, 0, 0.82, 0);
+        put(0.42, 0.1, 0.34, shadeHex(metal, -25), 0, 0.84, 0.02);
+        put(0.04, 0.2, 0.04, metal, 0, 0.98, -0.18); put(0.04, 0.04, 0.14, metal, 0, 1.06, -0.12); break;
+      case 'stove':
+        put(0.85, 0.82, 0.6, dark, 0, 0.41, 0); put(0.9, 0.06, 0.62, '#3a3a42', 0, 0.85, 0);
+        [[-0.2, -0.16], [0.2, -0.16], [-0.2, 0.18], [0.2, 0.18]].forEach(([x, z]) => put(0.16, 0.03, 0.16, '#1b1b20', x, 0.89, z));
+        put(0.7, 0.4, 0.04, shadeHex(dark, 25), 0, 0.3, 0.31); put(0.62, 0.05, 0.04, metal, 0, 0.52, 0.33); break;
+      case 'fridge':
+        put(0.7, 1.5, 0.58, hex, 0, 0.75, 0); put(0.7, 0.04, 0.59, dark, 0, 1.02, 0);
+        put(0.05, 0.4, 0.05, metal, 0.28, 1.25, 0.3); put(0.05, 0.3, 0.05, metal, 0.28, 0.75, 0.3); break;
+      case 'table':
+        put(1.1, 0.09, 0.8, hex, 0, 0.74, 0); legs(0.48, 0.33, 0.74, dark); break;
+      case 'chair':
+        put(0.46, 0.07, 0.46, hex, 0, 0.42, 0); put(0.46, 0.46, 0.07, hex, 0, 0.66, -0.2);
+        legs(0.19, 0.19, 0.42, dark); break;
+      case 'cabinet':
+        put(0.9, 1.3, 0.45, hex, 0, 0.65, 0);
+        put(0.42, 1.2, 0.04, light, -0.22, 0.65, 0.23); put(0.42, 1.2, 0.04, light, 0.22, 0.65, 0.23);
+        put(0.05, 0.05, 0.06, dark, -0.04, 0.65, 0.27); put(0.05, 0.05, 0.06, dark, 0.04, 0.65, 0.27); break;
+
+      /* ---- bathroom ---- */
+      case 'tub':
+        put(1.4, 0.5, 0.75, hex, 0, 0.25, 0); put(1.15, 0.3, 0.5, light, 0, 0.34, 0);
+        put(0.05, 0.18, 0.05, metal, -0.62, 0.5, 0); break;
+      case 'toilet':
+        put(0.42, 0.4, 0.5, hex, 0, 0.2, 0.05); put(0.48, 0.12, 0.52, hex, 0, 0.42, 0.05);
+        put(0.48, 0.06, 0.5, shadeHex(hex, -10), 0, 0.5, -0.02); put(0.5, 0.45, 0.18, hex, 0, 0.62, -0.25); break;
+      case 'bsink':
+        put(0.22, 0.7, 0.22, hex, 0, 0.35, 0); put(0.6, 0.2, 0.45, light, 0, 0.78, 0);
+        put(0.04, 0.14, 0.04, metal, 0, 0.92, -0.15); break;
+      case 'mirror':
+        put(0.62, 0.8, 0.07, hex, 0, 0.95, 0); put(0.5, 0.68, 0.03, '#cdeaff', 0, 0.95, 0.04); break;
+      case 'towel':
+        put(0.4, 0.5, 0.24, hex, 0, 0.27, 0); put(0.42, 0.06, 0.26, light, 0, 0.18, 0); put(0.42, 0.06, 0.26, light, 0, 0.34, 0); break;
+
+      /* ---- bedroom ---- */
+      case 'bed':
+        put(1.5, 0.25, 1.0, dark, 0, 0.13, 0); put(1.42, 0.2, 0.94, light, 0, 0.35, 0);
+        put(1.42, 0.14, 0.62, hex, 0, 0.46, 0.16); put(0.5, 0.14, 0.3, '#f4f4f8', -0.32, 0.5, -0.3); put(0.5, 0.14, 0.3, '#f4f4f8', 0.32, 0.5, -0.3); break;
+      case 'dresser':
+        put(1.0, 0.8, 0.5, hex, 0, 0.4, 0);
+        [0.22, 0.45, 0.68].forEach((y) => { put(0.9, 0.02, 0.02, dark, 0, y, 0.26); put(0.05, 0.05, 0.06, metal, -0.2, y + 0.1, 0.27); put(0.05, 0.05, 0.06, metal, 0.2, y + 0.1, 0.27); }); break;
+      case 'lamp':
+        put(0.22, 0.05, 0.22, dark, 0, 0.025, 0); put(0.05, 0.85, 0.05, metal, 0, 0.47, 0); put(0.36, 0.26, 0.36, '#fff2c2', 0, 0.98, 0); break;
+      case 'rug':
+        put(1.3, 0.04, 0.95, hex, 0, 0.02, 0); put(1.05, 0.05, 0.72, light, 0, 0.03, 0); break;
+      case 'wardrobe':
+        put(0.9, 1.7, 0.55, hex, 0, 0.85, 0); put(0.03, 1.6, 0.02, dark, 0, 0.85, 0.28);
+        put(0.05, 0.18, 0.06, metal, -0.08, 0.85, 0.29); put(0.05, 0.18, 0.06, metal, 0.08, 0.85, 0.29); break;
+
+      /* ---- living room ---- */
+      case 'sofa':
+        put(1.5, 0.35, 0.75, hex, 0, 0.22, 0); put(1.5, 0.45, 0.18, hex, 0, 0.5, -0.28);
+        put(0.22, 0.45, 0.75, hex, -0.64, 0.4, 0); put(0.22, 0.45, 0.75, hex, 0.64, 0.4, 0);
+        put(0.55, 0.12, 0.6, light, -0.32, 0.45, 0.05); put(0.55, 0.12, 0.6, light, 0.32, 0.45, 0.05); break;
+      case 'tv':
+        put(0.5, 0.06, 0.25, dark, 0, 0.03, 0); put(0.1, 0.18, 0.1, dark, 0, 0.15, 0);
+        put(1.2, 0.72, 0.07, '#15151a', 0, 0.6, 0); put(1.05, 0.6, 0.02, '#2a3550', 0, 0.6, 0.05); break;
+      case 'bookshelf': {
+        put(0.9, 1.6, 0.4, hex, 0, 0.8, 0);
+        const books = ['#d85b5b', '#e8b13a', '#5aa86b', '#5a7fd8', '#a45cd6', '#e87fb0'];
+        [0.4, 0.8, 1.2].forEach((y) => {
+          put(0.86, 0.04, 0.36, dark, 0, y - 0.02, 0);
+          for (let k = 0; k < 6; k++) put(0.1, 0.3, 0.22, books[(k + Math.round(y * 10)) % books.length], -0.35 + k * 0.14, y + 0.18, 0.05);
+        });
+        break;
+      }
+      case 'plant':
+        put(0.36, 0.3, 0.36, '#c8743c', 0, 0.15, 0); put(0.42, 0.06, 0.42, '#a85e2e', 0, 0.3, 0);
+        put(0.42, 0.4, 0.42, hex, 0, 0.6, 0); put(0.3, 0.35, 0.3, shadeHex(hex, 20), -0.12, 0.9, 0.05); put(0.28, 0.3, 0.28, shadeHex(hex, -15), 0.14, 0.92, -0.05); break;
+      case 'painting':
+        put(0.85, 0.62, 0.07, hex, 0, 1.1, 0); put(0.7, 0.48, 0.03, '#f4f4f8', 0, 1.1, 0.04);
+        put(0.3, 0.2, 0.02, '#7fb2e8', -0.15, 1.16, 0.06); put(0.25, 0.25, 0.02, '#ffcf6b', 0.16, 1.04, 0.06); break;
+
+      default:
+        put(0.6, 0.6, 0.6, hex, 0, 0.3, 0);
+    }
+    return g;
+  }
+
   function add(obj) { scene.add(obj); return obj; }
   function remove(obj) {
     scene.remove(obj);
@@ -428,7 +532,7 @@ window.World = (function () {
 
   return {
     init, start, focusOn,
-    makeBlock, makeBox, makeStructureBlock, add, remove, poof,
+    makeBlock, makeBox, makeStructureBlock, makeFurniture, add, remove, poof,
     registerNightLight, registerLamp, addStreetLight,
     intersect, setTapHandler,
     getDaylight, setClock,
