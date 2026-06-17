@@ -41,7 +41,8 @@ It's just static files — no build step, no server required.
   ```
   then open <http://localhost:8125>.
 
-Three.js is loaded from a CDN, so the first load needs an internet connection.
+Three.js is bundled in `vendor/three.min.js`, so the game can run offline and
+inside the iOS app bundle.
 
 ## Files
 

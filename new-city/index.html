@@ -23,6 +23,7 @@
     <div class="creator-header">
       <h1>✨ Make Your Idol ✨</h1>
       <p>Dress up your super-strong hero, then go build a brand-new city!</p>
+      <button id="lang-toggle-title" class="icon-btn lang-toggle" type="button" title="Change language">PL</button>
     </div>
   </div>
 
@@ -33,6 +34,7 @@
       <span id="phaseLabel" class="phase-label">Smash the house!</span>
       <span class="houses">🏠 <span id="houseCount">0</span></span>
       <span class="spacer"></span>
+      <button id="lang-toggle" class="icon-btn lang-toggle" type="button" title="Change language">PL</button>
       <button id="helpBtn" class="icon-btn" title="Help">❓</button>
       <button id="muteBtn" class="icon-btn" title="Sound on/off">🔊</button>
     </div>
@@ -61,8 +63,8 @@
 
   <div id="confetti" class="confetti"></div>
 
-  <!-- Three.js r128 (UMD build) — works straight from a file:// open, no server needed -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Three.js r128 (UMD build) — bundled locally so the game works offline and inside the iOS app -->
+  <script src="vendor/three.min.js"></script>
   <!-- game code -->
   <script src="src/data.js"></script>
   <script src="src/sound.js"></script>

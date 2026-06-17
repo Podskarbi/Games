@@ -10,8 +10,10 @@
   const D = window.GameData;
 
   const LOT_SPACING = 10;     // distance between lots along X
-  const GRID = 5;             // build grid is GRID x GRID columns
-  const MAX_H = 4;            // tallest column you can stack
+  const MIN_GRID = 4;         // smallest house footprint you can pick
+  const MAX_GRID = 20;        // biggest house footprint you can pick
+  const DEFAULT_GRID = 5;     // starting build grid (GRID x GRID columns)
+  const MAX_H = 12;           // tallest column you can stack (several floors)
 
   const state = {
     phase: 'avatar',
@@ -22,12 +24,16 @@
     house: null,              // { group, blocks:[] } currently being demolished
     rubble: [],               // active rubble meshes
     rubbleTotal: 0,
+    gridSize: DEFAULT_GRID,   // current build grid is gridSize x gridSize
+    buildTool: 'place',       // 'place' to stack blocks, 'erase' to remove
+    platform: null,           // green buildable platform mesh
     baseTiles: [],            // tappable build-grid tiles
     heights: [],              // heights[i][j]
     buildBlocks: [],          // placed structure cubes
     selectedBlock: 'wall',
     decorItems: [],
     room: 'kitchen',
+    roomView: 'all',          // 'all' = whole house, or a room key to focus one room
     insideView: false,        // peek inside the house while decorating
     paintMode: 'item',
     itemColor: '#d9c7a8',
@@ -40,16 +46,6 @@
   // ---- DOM refs ----------------------------------------------------------
   let elCreator, elGameUI, elToolbar, elStatus, elProgress, elProgressFill,
       elDialog, elHowto, elConfetti, elCelebrate, elDayIcon, elHouseCount;
-
-  // Always-visible, step-by-step instructions for each phase.
-  const INSTRUCT = {
-    permission: 'Tap “Ask nicely”, then “Smash time!” to start on this house.',
-    demolish: 'Tap the house blocks to smash them with your super hands — smash them all!',
-    clean: 'Tap the rubble to sweep it up. Fill the bar to 100% to clear the lot.',
-    build: 'Pick a block, then tap the glowing grid to stack it. Tap a block to remove it. In a hurry? Tap 🏠 Quick House, then Done.',
-    decorate: 'You’re looking inside! Pick a room and a piece of furniture, then tap the floor to place it. Use the colour dots to paint. Tap a piece to remove it.',
-    movein: 'Your new idol neighbour is moving in — give a wave! Tap “Next lot →” to build the next house.',
-  };
 
   function $(id) { return document.getElementById(id); }
 
@@ -77,9 +73,12 @@
       $('muteBtn').textContent = m ? '🔇' : '🔊';
     };
     $('helpBtn').onclick = showHelp;
+    $('lang-toggle').onclick = toggleLanguage;
 
     // start on the avatar creator
     Avatar.mountCreator(elCreator, onAvatarDone);
+    $('lang-toggle-title').onclick = toggleLanguage;
+    applyLanguage();
   }
 
   /* ================= AVATAR → GAME ================= */
@@ -168,20 +167,20 @@
   /* ================= PHASE: PERMISSION ================= */
   function enterPermission() {
     state.phase = 'permission';
-    setStatus('Ask the neighbour');
+    setStatus(D.t('statuses.permission'));
     setInstruction('permission');
     renderToolbar();
     showDialog(
-      `Can I rebuild your old house and make it fancy?`,
-      [{ label: '🙏 Ask nicely', cls: 'btn-done', onClick: grantPermission }]
+      D.t('askDialog'),
+      [{ label: D.t('askNicely'), cls: 'btn-done', onClick: grantPermission }]
     );
   }
 
   function grantPermission() {
     Sound.play('permission');
     hideDialog();
-    showDialog(`Yes please! I can't wait to live in a brand-new home! 💖`, [
-      { label: 'Smash time! 💪', cls: 'btn-done', onClick: () => { hideDialog(); enterDemolish(true); } },
+    showDialog(D.t('yesDialog'), [
+      { label: D.t('smashTime'), cls: 'btn-done', onClick: () => { hideDialog(); enterDemolish(true); } },
     ]);
     // little happy hop
     bounce(state.npc);
@@ -190,7 +189,7 @@
   /* ================= PHASE: DEMOLISH ================= */
   function enterDemolish() {
     state.phase = 'demolish';
-    setStatus('Smash the house!');
+    setStatus(D.t('statuses.demolish'));
     setInstruction('demolish');
     renderToolbar();
   }
@@ -210,7 +209,7 @@
   /* ================= PHASE: CLEAN ================= */
   function enterClean() {
     state.phase = 'clean';
-    setStatus('Sweep the rubble');
+    setStatus(D.t('statuses.clean'));
     setInstruction('clean');
     renderToolbar();
 
@@ -249,12 +248,34 @@
   /* ================= PHASE: BUILD ================= */
   function enterBuild() {
     state.phase = 'build';
-    setStatus('Build a new house');
+    state.buildTool = 'place';
+    setStatus(D.t('statuses.build'));
     hideProgress();
     setInstruction('build');
+    // fresh lot: orphan the previous (finished) house, don't delete it
+    state.platform = null;
+    state.baseTiles = [];
+    state.buildBlocks = [];
+    setupBuildGrid(false);
+    renderToolbar();
+  }
+
+  // (Re)create the green platform + tappable tiles for the current grid size.
+  // When clearPrev is true (grid-size change) the current in-progress build is
+  // removed first; on a fresh lot the caller has already orphaned the old house.
+  function setupBuildGrid(clearPrev) {
+    const G = state.gridSize;
+    const off = gridOffset();
+
+    if (clearPrev) {
+      if (state.platform) World.remove(state.platform);
+      state.baseTiles.forEach((t) => World.remove(t));
+      state.buildBlocks.forEach((b) => World.remove(b));
+    }
+    state.platform = null;
 
     // a fresh green buildable platform
-    const plat = World.makeBox(GRID + 0.4, 0.1, GRID + 0.4, '#8ad06a');
+    const plat = World.makeBox(G + 0.4, 0.1, G + 0.4, '#8ad06a');
     plat.position.set(state.lotX, 0.05, 0);
     plat.userData.platform = true;
     World.add(plat);
@@ -264,35 +285,48 @@
     state.heights = [];
     state.baseTiles = [];
     state.buildBlocks = [];
-    for (let i = 0; i < GRID; i++) {
+    for (let i = 0; i < G; i++) {
       state.heights[i] = [];
-      for (let j = 0; j < GRID; j++) {
+      for (let j = 0; j < G; j++) {
         state.heights[i][j] = 0;
         const tile = new THREE.Mesh(
           new THREE.PlaneGeometry(0.92, 0.92),
           new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.18 })
         );
         tile.rotation.x = -Math.PI / 2;
-        tile.position.set(state.lotX + (i - 2), 0.12, j - 2);
+        tile.position.set(state.lotX + (i - off), 0.12, j - off);
         tile.userData.col = { i, j };
         World.add(tile);
         state.baseTiles.push(tile);
       }
     }
+  }
+
+  // Centre offset so the grid stays centred on the lot for any size.
+  function gridOffset() { return (state.gridSize - 1) / 2; }
+
+  // Change the house footprint (clamped 4..20). Rebuilds the empty grid.
+  function setGridSize(n) {
+    const next = Math.max(MIN_GRID, Math.min(MAX_GRID, n));
+    if (next === state.gridSize) return;
+    state.gridSize = next;
+    setupBuildGrid(true);
+    Sound.play('tab');
     renderToolbar();
   }
 
-  function colWorld(i, j) { return { x: state.lotX + (i - 2), z: j - 2 }; }
+  function colWorld(i, j) { const off = gridOffset(); return { x: state.lotX + (i - off), z: j - off }; }
 
   function placeBlock(i, j) {
     const h = state.heights[i][j];
     if (h >= MAX_H) return;
     const def = D.BLOCKS.find((b) => b.id === state.selectedBlock);
-    const b = World.makeBlock(1, def.hex);
+    const b = World.makeStructureBlock(def.kind, def.hex);
     const w = colWorld(i, j);
     b.position.set(w.x, h + 0.5 + 0.1, w.z);
     b.userData.col = { i, j };
     b.userData.kind = def.kind;
+    b.userData.hex = def.hex;
     World.add(b);
     state.buildBlocks.push(b);
     state.heights[i][j] = h + 1;
@@ -307,7 +341,7 @@
       .filter((b) => b.userData.col.i === i && b.userData.col.j === j)
       .sort((a, b) => b.position.y - a.position.y)[0];
     if (!top) return;
-    World.poof(top.position, '#' + top.material.color.getHexString(), 4);
+    World.poof(top.position, top.userData.hex || '#cdb083', 4);
     World.remove(top);
     state.buildBlocks = state.buildBlocks.filter((b) => b !== top);
     state.heights[i][j] = h - 1;
@@ -318,29 +352,31 @@
   function quickHouse() {
     const wasMuted = Sound.isMuted();
     Sound.setMuted(true);   // hush the dozens of individual place sounds
+    const G = state.gridSize;
+    const mid = Math.floor(G / 2);   // door / window column for any size
     // clear anything placed first
     state.buildBlocks.slice().forEach((b) => World.remove(b));
     state.buildBlocks = [];
-    for (let i = 0; i < GRID; i++) for (let j = 0; j < GRID; j++) state.heights[i][j] = 0;
+    for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) state.heights[i][j] = 0;
 
     const setSel = (id) => { state.selectedBlock = id; };
     // floor
     setSel('floor');
-    for (let i = 0; i < GRID; i++) for (let j = 0; j < GRID; j++) placeBlock(i, j);
+    for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) placeBlock(i, j);
     // walls 2 high around the edge
     for (let h = 0; h < 2; h++) {
-      for (let i = 0; i < GRID; i++) for (let j = 0; j < GRID; j++) {
-        const edge = (i === 0 || i === GRID - 1 || j === 0 || j === GRID - 1);
+      for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) {
+        const edge = (i === 0 || i === G - 1 || j === 0 || j === G - 1);
         if (!edge) continue;
-        const isDoor = (j === GRID - 1 && i === 2 && h === 0);
-        const isWin = (h === 1 && ((i === 0 && j === 2) || (i === GRID - 1 && j === 2)));
+        const isDoor = (j === G - 1 && i === mid && h === 0);
+        const isWin = (h === 1 && ((i === 0 && j === mid) || (i === G - 1 && j === mid)));
         setSel(isDoor ? 'door' : isWin ? 'window' : 'wall');
         placeBlock(i, j);
       }
     }
     // roof
     setSel('roof');
-    for (let i = 0; i < GRID; i++) for (let j = 0; j < GRID; j++) placeBlock(i, j);
+    for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) placeBlock(i, j);
     setSel('wall');
     Sound.setMuted(wasMuted);
     Sound.play('done');
@@ -356,37 +392,104 @@
       if (kind === 'roof') {
         b.visible = !on;
       } else if (kind === 'wall' || kind === 'window' || kind === 'door') {
-        b.material.transparent = on;
-        b.material.opacity = on ? 0.22 : 1;
-        b.material.depthWrite = !on;
-        b.material.needsUpdate = true;
+        eachMesh(b, (m) => {
+          m.material.transparent = on;
+          m.material.opacity = on ? 0.22 : 1;
+          m.material.depthWrite = !on;
+          m.material.needsUpdate = true;
+        });
       }
     });
   }
 
+  // Run fn over every Mesh in an object (a plain block or a decorated group).
+  function eachMesh(obj, fn) {
+    obj.traverse((c) => { if (c.isMesh) fn(c); });
+  }
+
+  // Climb from a raycast hit (possibly a child mesh) to the block root
+  // that carries userData.col.
+  function blockColumn(obj) {
+    while (obj && !(obj.userData && obj.userData.col)) obj = obj.parent;
+    return obj ? obj.userData.col : null;
+  }
+
   function enterDecorate() {
     state.phase = 'decorate';
-    setStatus('Decorate the rooms');
+    setStatus(D.t('statuses.decorate'));
     // clear the build grid tiles but keep them for furniture placement
     state.room = 'kitchen';
     state.selectedItem = D.ROOMS.kitchen.items[0];
     state.itemColor = state.selectedItem.hex;
     state.paintMode = 'item';
-    applyInsideView(true);     // start by peeking inside so placing furniture is easy
+    setRoomView('all');        // start looking at the whole house from inside
     setInstruction('decorate');
     renderToolbar();
   }
 
+  /* ---- room views: split the grid into four quadrants, one per room ---- */
+  function quadrantOf(key) {
+    const G = state.gridSize;
+    const mid = Math.ceil(G / 2);
+    const idx = Object.keys(D.ROOMS).indexOf(key);
+    const right = (idx === 1 || idx === 3);   // bathroom / living sit on +i
+    const far = (idx === 2 || idx === 3);     // bedroom / living sit on +j
+    return {
+      i0: right ? mid : 0, i1: right ? G : mid,
+      j0: far ? mid : 0, j1: far ? G : mid,
+    };
+  }
+  function inQuadrant(q, i, j) { return i >= q.i0 && i < q.i1 && j >= q.j0 && j < q.j1; }
+
+  // Switch between the whole-house view and a single room (camera + tappable tiles).
+  function setRoomView(key) {
+    state.roomView = key;
+    applyInsideView(true);     // always look inside while decorating
+    if (key === 'all') {
+      state.baseTiles.forEach((t) => { t.visible = true; t.material.opacity = 0.18; });
+      World.focusOn(state.lotX, 0, state.gridSize + 7);
+      return;
+    }
+    // focus a single room: show only its tiles and zoom the camera in
+    const q = quadrantOf(key);
+    state.baseTiles.forEach((t) => {
+      const c = t.userData.col;
+      t.visible = inQuadrant(q, c.i, c.j);
+      t.material.opacity = 0.34;
+    });
+    const w = colWorld((q.i0 + q.i1 - 1) / 2, (q.j0 + q.j1 - 1) / 2);
+    World.focusOn(w.x, w.z, Math.max(6, state.gridSize * 0.5 + 4));
+    // match the furniture palette to the room being decorated
+    state.room = key;
+    state.selectedItem = D.ROOMS[key].items[0];
+    state.itemColor = state.selectedItem.hex;
+  }
+
   function placeFurniture(i, j) {
     if (!state.selectedItem) return;
+    // when focused on one room, keep furniture inside that room
+    if (state.roomView !== 'all' && !inQuadrant(quadrantOf(state.roomView), i, j)) return;
     const it = state.selectedItem;
     const w = colWorld(i, j);
     const m = World.makeBox(it.size[0], it.size[1], it.size[2], state.itemColor);
-    m.position.set(w.x, it.size[1] / 2 + 0.12, w.z);
+    // rest the piece on the floor surface so it isn't buried in the floor block
+    m.position.set(w.x, floorTopAt(i, j) + it.size[1] / 2, w.z);
     m.userData.furniture = true;
     World.add(m);
     state.decorItems.push(m);
     Sound.play('place');
+  }
+
+  // Top Y of the floor in a column (so furniture sits on it). Falls back to the
+  // platform surface when no floor block was placed there.
+  function floorTopAt(i, j) {
+    let top = 0.1;   // platform top
+    state.buildBlocks.forEach((b) => {
+      if (b.userData.kind === 'floor' && b.userData.col.i === i && b.userData.col.j === j) {
+        top = Math.max(top, b.position.y + 0.5);
+      }
+    });
+    return top;
   }
 
   function removeFurniture(mesh) {
@@ -397,7 +500,7 @@
 
   function paintShell(kind, hex) {
     state.buildBlocks.forEach((b) => {
-      if (b.userData.kind === kind) b.material.color.set(D.hexToColor(hex));
+      if (b.userData.kind === kind) eachMesh(b, (m) => m.material.color.set(D.hexToColor(hex)));
     });
     Sound.play('pick');
   }
@@ -405,8 +508,10 @@
   /* ================= PHASE: MOVE-IN ================= */
   function enterMoveIn() {
     state.phase = 'movein';
-    setStatus('Moving in!');
+    setStatus(D.t('statuses.movein'));
     applyInsideView(false);    // close the house back up so it looks finished
+    state.roomView = 'all';
+    World.focusOn(state.lotX, 0, state.gridSize + 8);   // pull back to admire the whole house
     setInstruction('movein');
     renderToolbar();
 
@@ -414,9 +519,13 @@
     state.baseTiles.forEach((t) => World.remove(t));
     state.baseTiles = [];
 
-    // register window blocks + an interior lamp so the home glows at night
+    // register window glass + an interior lamp so the home glows at night
     state.buildBlocks.forEach((b) => {
-      if (b.userData.kind === 'window') World.registerNightLight(b, 1.2);
+      if (b.userData.kind !== 'window') return;
+      const panes = [];
+      eachMesh(b, (m) => { if (m.userData.glass) panes.push(m); });
+      if (panes.length) panes.forEach((m) => World.registerNightLight(m, 1.2));
+      else World.registerNightLight(b, 1.2);
     });
     const lamp = new THREE.PointLight(0xffe6a8, 0, 6);
     lamp.position.set(state.lotX, 1.4, 0);
@@ -452,7 +561,7 @@
     elHouseCount.textContent = state.finishedHouses;
     Sound.play('movein');
     confettiBurst();
-    showCelebrate(`🎉 Welcome home! 🎉`, `${state.avatar.name}'s city has ${state.finishedHouses} home${state.finishedHouses > 1 ? 's' : ''}!`);
+    showCelebrate(D.t('welcomeHome'), D.t('cityHomes', state.avatar.name, state.finishedHouses));
     state.npc = null;
     renderToolbar();
   }
@@ -476,10 +585,17 @@
         break;
       }
       case 'build': {
+        // find the tapped column from a placed block (stack) or an empty tile
+        let col = null;
         const blockHit = World.intersect(ev, state.buildBlocks);
-        if (blockHit.length) { const c = blockHit[0].object.userData.col; removeTopOfColumn(c.i, c.j); break; }
-        const tileHit = World.intersect(ev, state.baseTiles);
-        if (tileHit.length) { const c = tileHit[0].object.userData.col; placeBlock(c.i, c.j); }
+        if (blockHit.length) col = blockColumn(blockHit[0].object);
+        if (!col) {
+          const tileHit = World.intersect(ev, state.baseTiles);
+          if (tileHit.length) col = tileHit[0].object.userData.col;
+        }
+        if (!col) break;
+        if (state.buildTool === 'erase') removeTopOfColumn(col.i, col.j);
+        else placeBlock(col.i, col.j);     // builds up: stacks on top of the column
         break;
       }
       case 'decorate': {
@@ -496,49 +612,52 @@
   function renderToolbar() {
     elToolbar.innerHTML = '';
     if (state.phase === 'demolish') {
-      addTip('Tap the house blocks to smash them! 💪');
+      addTip(D.t('instruct.demolish'));
     } else if (state.phase === 'permission') {
-      addTip('Ask your neighbour for permission first.');
+      addTip(D.t('instruct.permission'));
     } else if (state.phase === 'clean') {
-      addTip('Tap the rubble to sweep it up. 🧹');
+      addTip(D.t('instruct.clean'));
     } else if (state.phase === 'build') {
+      // house-size stepper (4×4 … 20×20)
+      elToolbar.appendChild(gridStepper());
+      elToolbar.appendChild(sep());
       D.BLOCKS.forEach((b) => {
-        const chip = mkChip(b.name, state.selectedBlock === b.id, () => {
+        const chip = mkChip(D.name(b), state.selectedBlock === b.id, () => {
           state.selectedBlock = b.id; Sound.play('pick'); renderToolbar();
         });
         chip.style.setProperty('--dot', b.hex);
         chip.classList.add('with-dot');
         elToolbar.appendChild(chip);
       });
-      elToolbar.appendChild(mkBtn('🏠 Quick House', 'btn-soft', quickHouse));
-      elToolbar.appendChild(mkBtn('Done →', 'btn-done', () => { Sound.play('done'); enterDecorate(); }));
+      // eraser: tap a column to remove its top block instead of stacking
+      elToolbar.appendChild(mkChip(D.t('eraser'), state.buildTool === 'erase', () => {
+        state.buildTool = state.buildTool === 'erase' ? 'place' : 'erase';
+        Sound.play('tab'); renderToolbar();
+      }));
+      elToolbar.appendChild(mkBtn(D.t('quickHouse'), 'btn-soft', quickHouse));
+      elToolbar.appendChild(mkBtn(D.t('done'), 'btn-done', () => { Sound.play('done'); enterDecorate(); }));
     } else if (state.phase === 'decorate') {
-      // peek inside / look outside toggle
-      elToolbar.appendChild(mkBtn(
-        state.insideView ? '👁 Peeking inside' : '🏠 Looking outside',
-        'btn-soft',
-        () => { applyInsideView(!state.insideView); Sound.play('tab'); renderToolbar(); }
-      ));
-      elToolbar.appendChild(sep());
-      // room tabs
+      // view switch: whole house or zoom into one room to decorate it
+      elToolbar.appendChild(mkChip('🏠 ' + D.t('wholeHouse'), state.roomView === 'all', () => {
+        setRoomView('all'); Sound.play('tab'); renderToolbar();
+      }));
       Object.keys(D.ROOMS).forEach((key) => {
         const r = D.ROOMS[key];
-        elToolbar.appendChild(mkChip(r.label, state.room === key, () => {
-          state.room = key; state.selectedItem = r.items[0]; state.itemColor = r.items[0].hex;
-          Sound.play('tab'); renderToolbar();
+        elToolbar.appendChild(mkChip(D.name({ id: key, name: r.label }), state.roomView === key, () => {
+          setRoomView(key); Sound.play('tab'); renderToolbar();
         }));
       });
       elToolbar.appendChild(sep());
       // items for the active room
       D.ROOMS[state.room].items.forEach((it) => {
-        elToolbar.appendChild(mkChip(it.name, state.selectedItem && state.selectedItem.id === it.id, () => {
+        elToolbar.appendChild(mkChip(D.name(it), state.selectedItem && state.selectedItem.id === it.id, () => {
           state.selectedItem = it; state.itemColor = it.hex; Sound.play('pick'); renderToolbar();
         }));
       });
       elToolbar.appendChild(sep());
       // paint target
       ['item', 'wall', 'floor'].forEach((mode) => {
-        const label = mode === 'item' ? 'Paint item' : mode === 'wall' ? 'Paint walls' : 'Paint floor';
+        const label = mode === 'item' ? D.t('paintItem') : mode === 'wall' ? D.t('paintWalls') : D.t('paintFloor');
         elToolbar.appendChild(mkChip(label, state.paintMode === mode, () => {
           state.paintMode = mode; Sound.play('tab'); renderToolbar();
         }));
@@ -547,17 +666,17 @@
       D.MATERIALS.forEach((m) => {
         const s = document.createElement('button');
         s.className = 'swatch';
-        s.style.background = m.hex; s.title = m.name;
+        s.style.background = m.hex; s.title = D.name(m);
         s.onclick = () => {
           if (state.paintMode === 'item') { state.itemColor = m.hex; Sound.play('pick'); }
           else paintShell(state.paintMode, m.hex);
         };
         elToolbar.appendChild(s);
       });
-      elToolbar.appendChild(mkBtn('Move in! →', 'btn-done', () => { Sound.play('done'); enterMoveIn(); }));
+      elToolbar.appendChild(mkBtn(D.t('moveIn'), 'btn-done', () => { Sound.play('done'); enterMoveIn(); }));
     } else if (state.phase === 'movein') {
-      addTip('Give your new neighbour a warm welcome! 👋');
-      elToolbar.appendChild(mkBtn('Next lot →', 'btn-done', nextLot));
+      addTip(D.t('welcomeTip'));
+      elToolbar.appendChild(mkBtn(D.t('nextLot'), 'btn-done', nextLot));
     }
   }
 
@@ -577,6 +696,24 @@
     return b;
   }
   function sep() { const s = document.createElement('span'); s.className = 'tb-sep'; return s; }
+
+  // A compact "House size: ➖ 5×5 ➕" control for the build toolbar.
+  function gridStepper() {
+    const wrap = document.createElement('div');
+    wrap.className = 'grid-stepper';
+    const label = document.createElement('span');
+    label.className = 'gs-label';
+    label.textContent = D.t('houseSize');
+    const minus = mkBtn(D.t('smaller'), 'btn-soft gs-btn', () => setGridSize(state.gridSize - 1));
+    const value = document.createElement('span');
+    value.className = 'gs-value';
+    value.textContent = `${state.gridSize}×${state.gridSize}`;
+    const plus = mkBtn(D.t('bigger'), 'btn-soft gs-btn', () => setGridSize(state.gridSize + 1));
+    minus.disabled = state.gridSize <= MIN_GRID;
+    plus.disabled = state.gridSize >= MAX_GRID;
+    wrap.append(label, minus, value, plus);
+    return wrap;
+  }
   function addTip(txt) { const d = document.createElement('div'); d.className = 'tb-tip'; d.textContent = txt; elToolbar.appendChild(d); }
 
   function setStatus(txt) { elStatus.textContent = txt; }
@@ -585,7 +722,7 @@
     elProgress.classList.remove('hidden');
     elProgressFill.style.width = Math.round(p * 100) + '%';
     elProgress.querySelector('.progress-label').textContent =
-      p >= 1 ? 'All clean! ✨' : `Clean: ${Math.round(p * 100)}%`;
+      p >= 1 ? D.t('cleanDone') : D.t('cleanPct', Math.round(p * 100));
   }
   function hideProgress() { elProgress.classList.add('hidden'); }
 
@@ -608,10 +745,10 @@
   // Persistent instructions bar: shows what to do in the current phase,
   // plus a steady reminder of the camera controls.
   function setInstruction(phaseKey) {
-    const step = INSTRUCT[phaseKey] || 'Tap around and have fun!';
+    const step = D.t(`instruct.${phaseKey}`) || D.t('instruct.fallback');
     elHowto.innerHTML =
       `<span class="howto-step">💡 ${step}</span>` +
-      `<span class="howto-controls">🖐 drag to spin · 🔍 pinch / scroll to zoom · 👆 tap to act</span>`;
+      `<span class="howto-controls">${D.t('controls')}</span>`;
     elHowto.classList.remove('hidden');
   }
   // The ❓ button simply shows/hides the instructions bar.
@@ -657,6 +794,37 @@
     }
     // day/night icon
     if (elDayIcon) elDayIcon.textContent = World.getDaylight() > 0.4 ? '☀️' : '🌙';
+  }
+
+  function applyLanguage() {
+    document.documentElement.lang = D.lang();
+    const creatorTitle = document.querySelector('.creator-header h1');
+    const creatorSub = document.querySelector('.creator-header p');
+    if (creatorTitle) creatorTitle.textContent = D.t('creatorTitle');
+    if (creatorSub) creatorSub.textContent = D.t('creatorSub');
+    ['lang-toggle', 'lang-toggle-title'].forEach((id) => {
+      const b = $(id);
+      if (b) {
+        b.textContent = D.t('langShort');
+        b.title = D.t('langTitle');
+      }
+    });
+    $('helpBtn').title = D.t('helpTitle');
+    $('muteBtn').title = D.t('soundTitle');
+    if (state.phase !== 'avatar') {
+      setStatus(D.t(`statuses.${state.phase}`));
+      setInstruction(state.phase);
+      renderToolbar();
+      const wasProgressHidden = elProgress.classList.contains('hidden');
+      const progress = parseFloat(elProgressFill.style.width || '0') / 100;
+      if (!wasProgressHidden) showProgress(progress);
+    }
+  }
+
+  function toggleLanguage() {
+    D.setLang(D.lang() === 'pl' ? 'en' : 'pl');
+    window.dispatchEvent(new Event('kids-language-change'));
+    applyLanguage();
   }
 
   window.addEventListener('DOMContentLoaded', init);

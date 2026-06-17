@@ -210,69 +210,211 @@ window.Avatar = (function () {
     const geo = new THREE.BoxGeometry(w, h, d);
     const mat = new THREE.MeshLambertMaterial({ color: D.hexToColor(hex) });
     if (emissive) { mat.emissive = new THREE.Color(D.hexToColor(hex)); mat.emissiveIntensity = 0.6; }
-    return new THREE.Mesh(geo, mat);
+    const m = new THREE.Mesh(geo, mat);
+    m.castShadow = true; m.receiveShadow = true;
+    return m;
+  }
+  // slightly nudge a colour lighter/darker for shading accents
+  function shade(hex, amt) {
+    const n = parseInt(hex.replace('#', ''), 16);
+    const cl = (v) => Math.max(0, Math.min(255, v));
+    const r = cl(((n >> 16) & 255) + amt), gg = cl(((n >> 8) & 255) + amt), b = cl((n & 255) + amt);
+    return '#' + ((1 << 24) + (r << 16) + (gg << 8) + b).toString(16).slice(1);
   }
 
-  // Returns a THREE.Group standing with feet at y=0, ~1.9 units tall.
+  // Returns a THREE.Group standing with feet at y=0, ~1.95 units tall.
+  // Far more detailed than a plain blocky doll: clothing, hair and
+  // accessories all change with the chosen outfit.
   function buildVoxel(a) {
     const g = new THREE.Group();
     const skin = skinHex(a.face.skin);
-    const hair = hairHex(a.hair.color).hex;
+    const hairC = hairHex(a.hair.color);
+    const hair = hairC.hex;
+    const hair2 = hairC.hex2 || hair;
     const top = colorOf('top', a.top.color, '#23232b');
     const bot = colorOf('bottoms', a.bottoms.color, '#3a6dff');
     const boot = colorOf('boots', a.boots.color, '#1f1f27');
     const prop = colorOf('prop', a.prop.color, '#43e8ff');
+    const eye = eyeHex(a.face.eyes);
+    const accent = a.aura !== 'none' ? auraHex(a.aura) : '#ff5fb0';
+    const add = (m) => g.add(m);
 
-    // boots
-    const lb = box(0.26, 0.3, 0.34, boot); lb.position.set(-0.18, 0.15, 0); g.add(lb);
-    const rb = box(0.26, 0.3, 0.34, boot); rb.position.set(0.18, 0.15, 0); g.add(rb);
-    // legs (bottoms)
-    const ll = box(0.24, 0.55, 0.28, bot); ll.position.set(-0.18, 0.57, 0); g.add(ll);
-    const rl = box(0.24, 0.55, 0.28, bot); rl.position.set(0.18, 0.57, 0); g.add(rl);
-    // torso (top)
-    const torso = box(0.6, 0.6, 0.34, top); torso.position.set(0, 1.15, 0); g.add(torso);
-    // shoulder trim for the sequin jacket
-    if (a.top.style === 'jacket') {
-      const ep = box(0.66, 0.12, 0.4, '#e8b13a'); ep.position.set(0, 1.42, 0); g.add(ep);
+    /* ---------------- boots ---------------- */
+    const bs = a.boots.style;
+    const bootH = bs === 'knee' ? 0.6 : bs === 'combat' ? 0.4 : 0.26;
+    [-0.18, 0.18].forEach((x) => {
+      const b = box(0.27, bootH, 0.38, boot); b.position.set(x, bootH / 2, 0.03); add(b);
+      if (bs === 'sneakers') {
+        const sole = box(0.3, 0.08, 0.42, '#f3f3f3'); sole.position.set(x, 0.04, 0.05); add(sole);
+        const swoosh = box(0.04, 0.16, 0.02, accent); swoosh.position.set(x, bootH * 0.6, 0.2); add(swoosh);
+      }
+      if (bs === 'combat') {
+        for (let k = 0; k < 3; k++) { const lace = box(0.18, 0.03, 0.02, shade(boot, 60)); lace.position.set(x, 0.12 + k * 0.1, 0.2); add(lace); }
+      }
+      if (bs === 'knee') { const cuff = box(0.29, 0.06, 0.4, shade(boot, -25)); cuff.position.set(x, bootH - 0.03, 0.03); add(cuff); }
+    });
+
+    /* ---------------- legs (skin) ---------------- */
+    const hipY = 0.92;
+    [-0.18, 0.18].forEach((x) => {
+      const h = hipY - bootH;
+      const leg = box(0.21, h, 0.27, skin); leg.position.set(x, bootH + h / 2, 0); add(leg);
+    });
+
+    /* ---------------- bottoms ---------------- */
+    const bt = a.bottoms.style;
+    if (bt === 'pants' || bt === 'shorts') {
+      const len = bt === 'shorts' ? 0.3 : hipY - bootH + 0.02;
+      [-0.18, 0.18].forEach((x) => {
+        const p = box(0.25, len, 0.3, bot); p.position.set(x, hipY - len / 2, 0); add(p);
+      });
+      const waist = box(0.58, 0.18, 0.34, bot); waist.position.set(0, hipY, 0); add(waist);
+      if (bt === 'pants') { // printed seam lines
+        [-0.18, 0.18].forEach((x) => { const seam = box(0.03, len, 0.02, shade(bot, 40)); seam.position.set(x, hipY - len / 2, 0.16); add(seam); });
+      }
+    } else { // skirts: stacked flares
+      const w1 = box(0.6, 0.18, 0.36, bot); w1.position.set(0, hipY, 0); add(w1);
+      const w2 = box(0.8, 0.24, 0.48, bot); w2.position.set(0, hipY - 0.16, 0); add(w2);
+      if (bt === 'layered') { const w3 = box(0.92, 0.16, 0.56, shade(bot, 30)); w3.position.set(0, hipY - 0.3, 0); add(w3); }
+      if (bt === 'skirt') { const chain = box(0.82, 0.05, 0.5, '#d4d4dc'); chain.position.set(0, hipY - 0.27, 0); add(chain); }
     }
-    // arms (skin) — keep a reference to the right arm so it can wave
-    const la = box(0.16, 0.55, 0.18, skin); la.position.set(-0.4, 1.18, 0); g.add(la);
+    if (a.accessories.belt) {
+      const belt = box(0.6, 0.09, 0.38, '#23232b'); belt.position.set(0, hipY + 0.02, 0); add(belt);
+      const buckle = box(0.12, 0.1, 0.04, '#e8b13a'); buckle.position.set(0, hipY + 0.02, 0.2); add(buckle);
+    }
+
+    /* ---------------- torso / top ---------------- */
+    const tp = a.top.style;
+    const torso = box(0.6, 0.62, 0.36, top); torso.position.set(0, 1.2, 0);
+    if (tp === 'blouse') { torso.material.emissive = new THREE.Color(D.hexToColor(top)); torso.material.emissiveIntensity = 0.15; }
+    add(torso);
+    if (tp === 'jacket') {
+      const ep = box(0.66, 0.12, 0.4, '#e8b13a'); ep.position.set(0, 1.46, 0); add(ep);
+      const trim = box(0.07, 0.62, 0.02, '#e8b13a'); trim.position.set(0, 1.2, 0.19); add(trim);
+      const collarL = box(0.16, 0.16, 0.04, shade(top, 30)); collarL.position.set(-0.14, 1.44, 0.19); add(collarL);
+      const collarR = box(0.16, 0.16, 0.04, shade(top, 30)); collarR.position.set(0.14, 1.44, 0.19); add(collarR);
+    } else if (tp === 'strappy') {
+      const shoulders = box(0.62, 0.14, 0.38, skin); shoulders.position.set(0, 1.46, 0); add(shoulders);
+      [-0.16, 0.16].forEach((x) => { const strap = box(0.06, 0.18, 0.38, top); strap.position.set(x, 1.42, 0); add(strap); });
+    } else if (tp === 'tee') {
+      const collar = box(0.26, 0.07, 0.38, '#f4f4f8'); collar.position.set(0, 1.48, 0.02); add(collar);
+      const motif = box(0.18, 0.18, 0.02, accent); motif.position.set(0, 1.2, 0.19); add(motif);
+    } else if (tp === 'blouse') {
+      const frill = box(0.5, 0.08, 0.38, shade(top, 40)); frill.position.set(0, 1.48, 0); add(frill);
+    }
+
+    /* ---------------- arms + hands ---------------- */
+    const gloveOn = a.accessories.gloves;
+    const sleeved = (tp === 'jacket' || tp === 'tee' || tp === 'blouse');
+    // left arm (static)
+    const la = box(0.16, 0.5, 0.18, skin); la.position.set(-0.4, 1.22, 0); add(la);
+    const lh = box(0.17, 0.13, 0.2, gloveOn ? '#23232b' : skin); lh.position.set(-0.4, 0.93, 0); add(lh);
+    if (sleeved) { const sl = box(0.19, 0.24, 0.21, top); sl.position.set(-0.4, 1.38, 0); add(sl); }
+    if (a.accessories.armbands) { const ab = box(0.19, 0.06, 0.21, accent); ab.position.set(-0.4, 1.08, 0); add(ab); }
+    // right arm (group so it can wave)
     const ra = new THREE.Group();
-    const raMesh = box(0.16, 0.55, 0.18, skin); raMesh.position.set(0, -0.27, 0); ra.add(raMesh);
-    ra.position.set(0.4, 1.42, 0); g.add(ra);
-    // head + hair
-    const head = box(0.44, 0.44, 0.4, skin); head.position.set(0, 1.72, 0); g.add(head);
-    const hairTop = box(0.5, 0.18, 0.46, hair); hairTop.position.set(0, 1.95, 0); g.add(hairTop);
-    const hairBack = box(0.5, 0.4, 0.16, hair); hairBack.position.set(0, 1.74, -0.2); g.add(hairBack);
-    if (a.hair.style === 'long' || a.hair.style === 'braids') {
-      const longHair = box(0.46, 0.7, 0.14, hair); longHair.position.set(0, 1.4, -0.22); g.add(longHair);
-    }
-    if (a.hair.style === 'buns') {
-      const b1 = box(0.18, 0.18, 0.18, hair); b1.position.set(-0.28, 2.02, 0); g.add(b1);
-      const b2 = box(0.18, 0.18, 0.18, hair); b2.position.set(0.28, 2.02, 0); g.add(b2);
-    }
-    // tiny dark eyes on the front face
-    const eyeL = box(0.06, 0.06, 0.02, '#2b2b33'); eyeL.position.set(-0.1, 1.74, 0.21); g.add(eyeL);
-    const eyeR = box(0.06, 0.06, 0.02, '#2b2b33'); eyeR.position.set(0.1, 1.74, 0.21); g.add(eyeR);
+    const raMesh = box(0.16, 0.5, 0.18, skin); raMesh.position.set(0, -0.25, 0); ra.add(raMesh);
+    const rh = box(0.17, 0.13, 0.2, gloveOn ? '#23232b' : skin); rh.position.set(0, -0.54, 0); ra.add(rh);
+    if (sleeved) { const sr = box(0.19, 0.24, 0.21, top); sr.position.set(0, -0.09, 0); ra.add(sr); }
+    if (a.accessories.armbands) { const abr = box(0.19, 0.06, 0.21, accent); abr.position.set(0, -0.39, 0); ra.add(abr); }
+    ra.position.set(0.4, 1.47, 0); add(ra);
 
-    // prop held in right hand (glows)
+    /* ---------------- neck + head ---------------- */
+    const neck = box(0.17, 0.1, 0.17, skin); neck.position.set(0, 1.52, 0); add(neck);
+    const head = box(0.44, 0.46, 0.42, skin); head.position.set(0, 1.76, 0); add(head);
+    const ear1 = box(0.05, 0.1, 0.08, skin); ear1.position.set(-0.23, 1.74, 0.02); add(ear1);
+    const ear2 = box(0.05, 0.1, 0.08, skin); ear2.position.set(0.23, 1.74, 0.02); add(ear2);
+
+    /* ---------------- accessories on the head/neck ---------------- */
+    if (a.accessories.choker) {
+      const ch = box(0.46, 0.06, 0.44, '#23232b'); ch.position.set(0, 1.56, 0); add(ch);
+      const gem = box(0.06, 0.06, 0.04, '#43e8ff'); gem.position.set(0, 1.56, 0.23); add(gem);
+    }
+    if (a.accessories.earrings) {
+      [-0.25, 0.25].forEach((x) => { const ear = box(0.04, 0.11, 0.04, '#e8b13a'); ear.position.set(x, 1.67, 0.06); add(ear); });
+    }
+
+    /* ---------------- face ---------------- */
+    const fz = 0.215;
+    [-0.1, 0.1].forEach((x, i) => {
+      const winkRight = (a.face.expression === 'wink' && i === 1);
+      if (winkRight) { const lid = box(0.11, 0.025, 0.02, shade(skin, -40)); lid.position.set(x, 1.78, fz); add(lid); return; }
+      const white = box(0.1, 0.11, 0.02, '#ffffff'); white.position.set(x, 1.79, fz); add(white);
+      const iris = box(0.06, 0.07, 0.02, eye); iris.position.set(x, 1.785, fz + 0.005); add(iris);
+      const pup = box(0.025, 0.03, 0.02, '#1a1a1f'); pup.position.set(x, 1.785, fz + 0.01); add(pup);
+      const brow = box(0.12, 0.02, 0.02, shade(hair, -20)); brow.position.set(x, 1.88, fz); add(brow);
+    });
+    // nose
+    const nose = box(0.05, 0.06, 0.04, shade(skin, -18)); nose.position.set(0, 1.72, fz + 0.01); add(nose);
+    // mouth varies by expression
+    if (a.face.expression === 'cool') {
+      const m = box(0.14, 0.025, 0.02, '#b34a55'); m.position.set(0, 1.65, fz); add(m);
+    } else {
+      const m = box(0.12, 0.04, 0.02, '#d05a66'); m.position.set(0, 1.65, fz); add(m);
+      const lip = box(0.08, 0.02, 0.02, '#b34a55'); lip.position.set(0, 1.63, fz); add(lip);
+    }
+    // blush
+    [-0.16, 0.16].forEach((x) => {
+      const bl = box(0.07, 0.05, 0.02, '#ff9bbd'); bl.material.transparent = true; bl.material.opacity = 0.6;
+      bl.position.set(x, 1.69, fz); add(bl);
+    });
+    // face gem
+    if (a.face.gem === 'star') { const s = box(0.08, 0.08, 0.03, '#ffe14d', true); s.position.set(0, 1.95, fz - 0.02); add(s); }
+    else if (a.face.gem === 'gem') { const s = box(0.06, 0.06, 0.03, '#43e8ff', true); s.position.set(0, 1.95, fz - 0.02); add(s); }
+
+    /* ---------------- hair (per style) ---------------- */
+    const cap = box(0.5, 0.2, 0.48, hair); cap.position.set(0, 2.0, 0); add(cap);
+    const bang = box(0.5, 0.14, 0.1, hair); bang.position.set(0, 1.92, 0.2); add(bang);
+    const back = box(0.5, 0.44, 0.16, hair); back.position.set(0, 1.74, -0.23); add(back);
+    const hs = a.hair.style;
+    if (hs === 'long' || hs === 'braids') {
+      const lng = box(0.5, 0.85, 0.14, hair); lng.position.set(0, 1.34, -0.25); add(lng);
+      const tip = box(0.5, 0.18, 0.14, hair2); tip.position.set(0, 0.94, -0.25); add(tip);
+      if (hs === 'braids') {
+        [-0.28, 0.28].forEach((x) => {
+          for (let k = 0; k < 4; k++) { const seg = box(0.12, 0.16, 0.12, k % 2 ? shade(hair, -18) : hair); seg.position.set(x, 1.6 - k * 0.16, 0.04); add(seg); }
+        });
+      }
+    } else if (hs === 'ponytail') {
+      const tie = box(0.16, 0.1, 0.16, accent); tie.position.set(0, 1.92, -0.26); add(tie);
+      const tail = box(0.2, 0.7, 0.2, hair); tail.position.set(0, 1.55, -0.36); add(tail);
+      const tailTip = box(0.2, 0.16, 0.2, hair2); tailTip.position.set(0, 1.18, -0.36); add(tailTip);
+    } else if (hs === 'buns') {
+      [-0.3, 0.3].forEach((x) => {
+        const bun = box(0.22, 0.22, 0.22, hair); bun.position.set(x, 2.06, 0); add(bun);
+        const wrap = box(0.24, 0.06, 0.24, shade(hair, -20)); wrap.position.set(x, 2.06, 0); add(wrap);
+      });
+    } else if (hs === 'bob') {
+      [-0.25, 0.25].forEach((x) => { const side = box(0.12, 0.42, 0.44, hair); side.position.set(x, 1.66, 0); add(side); });
+    } else if (hs === 'halfup') {
+      const knot = box(0.2, 0.18, 0.2, hair); knot.position.set(0, 2.06, -0.16); add(knot);
+      [-0.26, 0.26].forEach((x) => { const strand = box(0.1, 0.4, 0.18, hair); strand.position.set(x, 1.6, 0.04); add(strand); });
+    }
+
+    /* ---------------- prop in right hand (glows) ---------------- */
     if (a.prop.style !== 'none') {
-      const p = box(0.08, 0.5, 0.08, prop, true); p.position.set(0, -0.5, 0); ra.add(p);
       if (a.prop.style === 'wand') {
-        const star = box(0.18, 0.18, 0.08, prop, true); star.position.set(0, -0.78, 0); ra.add(star);
+        const stick = box(0.07, 0.5, 0.07, '#e8e2cf'); stick.position.set(0, -0.5, 0.05); ra.add(stick);
+        const star = box(0.2, 0.2, 0.08, prop, true); star.position.set(0, -0.8, 0.05); ra.add(star);
+      } else if (a.prop.style === 'blade') {
+        const hilt = box(0.1, 0.16, 0.1, '#5a5a66'); hilt.position.set(0, -0.5, 0.05); ra.add(hilt);
+        const blade = box(0.08, 0.6, 0.08, prop, true); blade.position.set(0, -0.92, 0.05); ra.add(blade);
+      } else if (a.prop.style === 'baton') {
+        const rod = box(0.07, 0.5, 0.07, prop, true); rod.position.set(0, -0.62, 0.05); ra.add(rod);
+        const tipB = box(0.12, 0.12, 0.12, prop, true); tipB.position.set(0, -0.9, 0.05); ra.add(tipB);
       }
     }
 
-    // aura: a soft glowing point light + faint shell
+    /* ---------------- aura: glow light + faint shell ---------------- */
     if (a.aura !== 'none') {
       const aHex = auraHex(a.aura);
       const light = new THREE.PointLight(D.hexToColor(aHex), 0.8, 4);
-      light.position.set(0, 1.2, 0); g.add(light);
+      light.position.set(0, 1.2, 0); add(light);
       const shellMat = new THREE.MeshBasicMaterial({
         color: D.hexToColor(aHex), transparent: true, opacity: 0.12,
       });
-      const shell = new THREE.Mesh(new THREE.SphereGeometry(1.1, 12, 12), shellMat);
-      shell.position.set(0, 1.05, 0); g.add(shell);
+      const shell = new THREE.Mesh(new THREE.SphereGeometry(1.15, 12, 12), shellMat);
+      shell.position.set(0, 1.1, 0); add(shell);
       g.userData.auraShell = shell;
     }
 
@@ -311,17 +453,22 @@ window.Avatar = (function () {
     const a = D.defaultAvatar();
 
     root.innerHTML = `
+      <div class="creator-header">
+        <h1>${D.t('creatorTitle')}</h1>
+        <p>${D.t('creatorSub')}</p>
+        <button id="lang-toggle-title" class="icon-btn lang-toggle" type="button" title="${D.t('langTitle')}">${D.t('langShort')}</button>
+      </div>
       <div class="creator">
         <div class="creator-preview">
           <div id="avatarPreview"></div>
-          <input id="idolName" class="name-input" maxlength="16" placeholder="Your idol name…" />
+          <input id="idolName" class="name-input" maxlength="16" placeholder="${D.t('namePlaceholder')}" />
         </div>
         <div class="creator-panel">
           <div class="tabs" id="tabs"></div>
           <div class="tab-body" id="tabBody"></div>
           <div class="creator-actions">
-            <button class="btn btn-surprise" id="surpriseBtn">✨ Surprise Me!</button>
-            <button class="btn btn-done" id="doneBtn">Done →</button>
+            <button class="btn btn-surprise" id="surpriseBtn">${D.t('surprise')}</button>
+            <button class="btn btn-done" id="doneBtn">${D.t('done')}</button>
           </div>
         </div>
       </div>`;
@@ -332,14 +479,14 @@ window.Avatar = (function () {
     const nameInput = root.querySelector('#idolName');
 
     const tabs = [
-      { key: 'hair', label: 'Hair' },
-      { key: 'top', label: 'Jacket' },
-      { key: 'bottoms', label: 'Bottoms' },
-      { key: 'boots', label: 'Boots' },
-      { key: 'prop', label: 'Prop' },
-      { key: 'face', label: 'Face' },
-      { key: 'extras', label: 'Extras' },
-      { key: 'aura', label: 'Aura' },
+      { key: 'hair' },
+      { key: 'top' },
+      { key: 'bottoms' },
+      { key: 'boots' },
+      { key: 'prop' },
+      { key: 'face' },
+      { key: 'extras' },
+      { key: 'aura' },
     ];
     let active = 'hair';
 
@@ -372,36 +519,36 @@ window.Avatar = (function () {
       const cat = W[active];
 
       if (active === 'face') {
-        const r1 = row('Skin tone');
+        const r1 = row(D.t('skinTone'));
         D.SKIN_TONES.forEach((s) => r1.appendChild(swatch(s.hex, a.face.skin === s.id, () => { a.face.skin = s.id; redraw(); })));
         bodyEl.appendChild(r1);
-        const r2 = row('Eyes');
+        const r2 = row(D.t('eyes'));
         D.EYE_COLORS.forEach((e) => r2.appendChild(swatch(e.hex, a.face.eyes === e.id, () => { a.face.eyes = e.id; redraw(); })));
         bodyEl.appendChild(r2);
-        const r3 = row('Expression');
-        W.face.expressions.forEach((e) => r3.appendChild(chip(e.name, a.face.expression === e.id, () => { a.face.expression = e.id; redraw(); })));
+        const r3 = row(D.t('expression'));
+        W.face.expressions.forEach((e) => r3.appendChild(chip(D.name(e), a.face.expression === e.id, () => { a.face.expression = e.id; redraw(); })));
         bodyEl.appendChild(r3);
-        const r4 = row('Face gem');
-        W.face.gems.forEach((e) => r4.appendChild(chip(e.name, a.face.gem === e.id, () => { a.face.gem = e.id; redraw(); })));
+        const r4 = row(D.t('faceGem'));
+        W.face.gems.forEach((e) => r4.appendChild(chip(D.name(e), a.face.gem === e.id, () => { a.face.gem = e.id; redraw(); })));
         bodyEl.appendChild(r4);
         return;
       }
 
       if (active === 'extras') {
         const items = [
-          ['armbands', 'Arm bands'], ['gloves', 'Gloves'],
-          ['choker', 'Choker'], ['earrings', 'Earrings'], ['belt', 'Belt'],
+          ['armbands', D.lang() === 'pl' ? 'Opaski' : 'Arm bands'], ['gloves', D.lang() === 'pl' ? 'Rękawiczki' : 'Gloves'],
+          ['choker', D.lang() === 'pl' ? 'Choker' : 'Choker'], ['earrings', D.lang() === 'pl' ? 'Kolczyki' : 'Earrings'], ['belt', D.lang() === 'pl' ? 'Pasek' : 'Belt'],
         ];
-        const r = row('Accessories (pick as many as you like)');
+        const r = row(D.t('accessories'));
         items.forEach(([k, lbl]) => r.appendChild(chip(lbl, a.accessories[k], () => { a.accessories[k] = !a.accessories[k]; redraw(); })));
         bodyEl.appendChild(r);
         return;
       }
 
       if (active === 'aura') {
-        const r = row('Choose your aura');
+        const r = row(D.t('chooseAura'));
         W.aura.styles.forEach((s) => {
-          const c = chip(s.name, a.aura === s.id, () => { a.aura = s.id; Sound.play('sparkle'); redraw(); });
+          const c = chip(D.name(s), a.aura === s.id, () => { a.aura = s.id; Sound.play('sparkle'); redraw(); });
           if (s.id !== 'none') { c.style.borderColor = s.hex; }
           r.appendChild(c);
         });
@@ -410,12 +557,12 @@ window.Avatar = (function () {
       }
 
       // generic style + colour categories (hair, top, bottoms, boots, prop)
-      const styleRow = row('Style');
-      cat.styles.forEach((s) => styleRow.appendChild(chip(s.name, a[active].style === s.id, () => { a[active].style = s.id; redraw(); })));
+      const styleRow = row(D.t('style'));
+      cat.styles.forEach((s) => styleRow.appendChild(chip(D.name(s), a[active].style === s.id, () => { a[active].style = s.id; redraw(); })));
       bodyEl.appendChild(styleRow);
       if (cat.colors) {
-        const colRow = row('Colour');
-        cat.colors.forEach((c) => colRow.appendChild(swatch(c.hex2 ? `linear-gradient(${c.hex},${c.hex2})` : c.hex, a[active].color === c.id, () => { a[active].color = c.id; redraw(); }, c.name)));
+        const colRow = row(D.t('colour'));
+        cat.colors.forEach((c) => colRow.appendChild(swatch(c.hex2 ? `linear-gradient(${c.hex},${c.hex2})` : c.hex, a[active].color === c.id, () => { a[active].color = c.id; redraw(); }, D.name(c))));
         bodyEl.appendChild(colRow);
       }
     }
@@ -425,7 +572,7 @@ window.Avatar = (function () {
       tabs.forEach((t) => {
         const b = document.createElement('button');
         b.className = 'tab' + (active === t.key ? ' sel' : '');
-        b.textContent = t.label;
+        b.textContent = D.t(`tabs.${t.key}`);
         b.onclick = () => { active = t.key; Sound.play('tab'); renderTabs(); renderTabBody(); };
         tabsEl.appendChild(b);
       });
@@ -441,7 +588,7 @@ window.Avatar = (function () {
       renderTabs(); renderTabBody(); refreshPreview();
     };
     root.querySelector('#doneBtn').onclick = () => {
-      a.name = (nameInput.value || '').trim() || 'Star';
+      a.name = (nameInput.value || '').trim() || D.t('defaultName');
       Sound.play('done');
       onDone(JSON.parse(JSON.stringify(a)));
     };
@@ -449,6 +596,14 @@ window.Avatar = (function () {
     renderTabs();
     renderTabBody();
     refreshPreview();
+
+    window.addEventListener('kids-language-change', () => {
+      nameInput.placeholder = D.t('namePlaceholder');
+      root.querySelector('#surpriseBtn').textContent = D.t('surprise');
+      root.querySelector('#doneBtn').textContent = D.t('done');
+      renderTabs();
+      renderTabBody();
+    });
   }
 
   return { renderSVG, buildVoxel, random, mountCreator };

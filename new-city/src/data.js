@@ -6,6 +6,165 @@
    ============================================================ */
 
 window.GameData = (function () {
+  const LANG_KEY = 'kidsGamesLanguage';
+
+  const UI = {
+    en: {
+      langShort: 'PL',
+      langTitle: 'Change language',
+      creatorTitle: '✨ Make Your Idol ✨',
+      creatorSub: 'Dress up your super-strong hero, then go build a brand-new city!',
+      namePlaceholder: 'Your idol name…',
+      surprise: '✨ Surprise Me!',
+      done: 'Done →',
+      tabs: { hair: 'Hair', top: 'Jacket', bottoms: 'Bottoms', boots: 'Boots', prop: 'Prop', face: 'Face', extras: 'Extras', aura: 'Aura' },
+      skinTone: 'Skin tone',
+      eyes: 'Eyes',
+      expression: 'Expression',
+      faceGem: 'Face gem',
+      accessories: 'Accessories (pick as many as you like)',
+      chooseAura: 'Choose your aura',
+      style: 'Style',
+      colour: 'Colour',
+      statuses: {
+        permission: 'Ask the neighbour',
+        demolish: 'Smash the house!',
+        clean: 'Sweep the rubble',
+        build: 'Build a new house',
+        decorate: 'Decorate the rooms',
+        movein: 'Moving in!',
+      },
+      instruct: {
+        permission: 'Tap “Ask nicely”, then “Smash time!” to start on this house.',
+        demolish: 'Tap the house blocks to smash them with your super hands — smash them all!',
+        clean: 'Tap the rubble to sweep it up. Fill the bar to 100% to clear the lot.',
+        build: 'Pick a block, then tap the grid to place it. Tap the same spot again to stack UP and build floors. Use ➖➕ to size the house. Tap 🧽 Eraser then a block to remove it. In a hurry? Tap 🏠 Quick House.',
+        decorate: 'Tap a room (Kitchen, Bathroom…) to zoom in and decorate just that room, or 🏠 Whole house to see it all. Pick furniture, tap the floor to place it, tap a piece to remove it. Colour dots paint.',
+        movein: 'Your new idol neighbour is moving in — give a wave! Tap “Next lot →” to build the next house.',
+        fallback: 'Tap around and have fun!',
+      },
+      controls: '🖐 drag to spin · 🔍 pinch / scroll to zoom · 👆 tap to act',
+      askDialog: 'Can I rebuild your old house and make it fancy?',
+      askNicely: '🙏 Ask nicely',
+      yesDialog: "Yes please! I can't wait to live in a brand-new home! 💖",
+      smashTime: 'Smash time! 💪',
+      quickHouse: '🏠 Quick House',
+      houseSize: 'House size',
+      smaller: '➖',
+      bigger: '➕',
+      eraser: '🧽 Eraser',
+      peeking: '👁 Peeking inside',
+      outside: '🏠 Looking outside',
+      wholeHouse: 'Whole house',
+      paintItem: 'Paint item',
+      paintWalls: 'Paint walls',
+      paintFloor: 'Paint floor',
+      moveIn: 'Move in! →',
+      welcomeTip: 'Give your new neighbour a warm welcome! 👋',
+      nextLot: 'Next lot →',
+      cleanDone: 'All clean! ✨',
+      cleanPct: (pct) => `Clean: ${pct}%`,
+      welcomeHome: '🎉 Welcome home! 🎉',
+      cityHomes: (name, count) => `${name}'s city has ${count} home${count > 1 ? 's' : ''}!`,
+      defaultName: 'Star',
+      helpTitle: 'Help',
+      soundTitle: 'Sound on/off',
+    },
+    pl: {
+      langShort: 'EN',
+      langTitle: 'Zmień język',
+      creatorTitle: '✨ Stwórz swoją idolkę ✨',
+      creatorSub: 'Ubierz super-silnego bohatera, a potem zbuduj zupełnie nowe miasto!',
+      namePlaceholder: 'Imię idola…',
+      surprise: '✨ Losuj!',
+      done: 'Gotowe →',
+      tabs: { hair: 'Włosy', top: 'Kurtka', bottoms: 'Dół', boots: 'Buty', prop: 'Rekwizyt', face: 'Twarz', extras: 'Dodatki', aura: 'Aura' },
+      skinTone: 'Odcień skóry',
+      eyes: 'Oczy',
+      expression: 'Mina',
+      faceGem: 'Ozdoba twarzy',
+      accessories: 'Dodatki (wybierz ile chcesz)',
+      chooseAura: 'Wybierz aurę',
+      style: 'Styl',
+      colour: 'Kolor',
+      statuses: {
+        permission: 'Zapytaj sąsiada',
+        demolish: 'Zburz dom!',
+        clean: 'Zamieć gruz',
+        build: 'Zbuduj nowy dom',
+        decorate: 'Udekoruj pokoje',
+        movein: 'Przeprowadzka!',
+      },
+      instruct: {
+        permission: 'Kliknij „Poproś ładnie”, potem „Czas burzyć!”, żeby zacząć przy tym domu.',
+        demolish: 'Klikaj klocki domu, żeby rozbić je super-rękami — zburz wszystko!',
+        clean: 'Klikaj gruz, żeby go zamieść. Napełnij pasek do 100%, żeby oczyścić działkę.',
+        build: 'Wybierz klocek, potem klikaj siatkę, żeby go postawić. Kliknij to samo miejsce znowu, żeby budować W GÓRĘ i robić piętra. Zmień wielkość ➖➕. Kliknij 🧽 Gumka, potem klocek, żeby go zdjąć. Spieszysz się? Kliknij 🏠 Szybki Dom.',
+        decorate: 'Kliknij pokój (Kuchnia, Łazienka…), żeby przybliżyć i udekorować tylko ten pokój, albo 🏠 Cały dom, żeby zobaczyć wszystko. Wybierz mebel, kliknij podłogę, żeby go postawić, kliknij mebel, żeby go usunąć. Kolorowe kropki malują.',
+        movein: 'Nowy idol-sąsiad się wprowadza — pomachaj! Kliknij „Następna działka →”, żeby budować dalej.',
+        fallback: 'Klikaj i baw się dobrze!',
+      },
+      controls: '🖐 przeciągnij, żeby obracać · 🔍 uszczypnij / przewiń, żeby przybliżyć · 👆 kliknij, żeby działać',
+      askDialog: 'Czy mogę przebudować twój stary dom i zrobić go super?',
+      askNicely: '🙏 Poproś ładnie',
+      yesDialog: 'Tak, proszę! Nie mogę się doczekać nowego domu! 💖',
+      smashTime: 'Czas burzyć! 💪',
+      quickHouse: '🏠 Szybki Dom',
+      houseSize: 'Wielkość domu',
+      smaller: '➖',
+      bigger: '➕',
+      eraser: '🧽 Gumka',
+      peeking: '👁 Patrzysz do środka',
+      outside: '🏠 Patrzysz z zewnątrz',
+      wholeHouse: 'Cały dom',
+      paintItem: 'Maluj mebel',
+      paintWalls: 'Maluj ściany',
+      paintFloor: 'Maluj podłogę',
+      moveIn: 'Wprowadź! →',
+      welcomeTip: 'Przywitaj ciepło nowego sąsiada! 👋',
+      nextLot: 'Następna działka →',
+      cleanDone: 'Wszystko czyste! ✨',
+      cleanPct: (pct) => `Czystość: ${pct}%`,
+      welcomeHome: '🎉 Witaj w domu! 🎉',
+      cityHomes: (name, count) => `Miasto ${name} ma już ${count} ${count === 1 ? 'dom' : 'domy'}!`,
+      defaultName: 'Gwiazda',
+      helpTitle: 'Pomoc',
+      soundTitle: 'Dźwięk wł./wył.',
+    },
+  };
+
+  const PL_NAMES = {
+    purple: 'Fioletowy', pink: 'Różowy', blue: 'Niebieski', black: 'Czarny', silver: 'Srebrny', blonde: 'Blond', ombre: 'Ombré',
+    white: 'Biały', gold: 'Złoty', yellow: 'Żółty', patterned: 'Wzorzysty', cyan: 'Cyjan', green: 'Zielony',
+    brown: 'Brązowe', violet: 'Fioletowe',
+    long: 'Długie falujące', ponytail: 'Wysoki kucyk', buns: 'Kosmiczne koki', bob: 'Gładki bob', braids: 'Warkocze', halfup: 'Półupięte z grzywką',
+    jacket: 'Cekinowa kurtka', strappy: 'Top na ramiączkach', tee: 'Ozdobny T-shirt', blouse: 'Błyszcząca bluzka',
+    skirt: 'Spódnica z łańcuszkiem', pants: 'Wzorzyste spodnie', shorts: 'Wysokie szorty', layered: 'Warstwowa spódnica',
+    knee: 'Do kolan', combat: 'Bojówki', sneakers: 'Sneakersy', covers: 'Nakładki na buty',
+    none: 'Brak', wand: 'Gwiezdna różdżka', blade: 'Błyszczące ostrze', baton: 'Świetlny baton',
+    smile: 'Uśmiech', cool: 'Cool', wink: 'Mrugnięcie', star: 'Gwiazda', gem: 'Klejnot',
+    floor: 'Podłoga', wall: 'Ściana', window: 'Okno', door: 'Drzwi', roof: 'Dach',
+    paintCream: 'Kremowy', paintMint: 'Miętowy', paintBlue: 'Niebo', paintPink: 'Różowy', wood: 'Drewno', tile: 'Kafelki',
+    kitchen: 'Kuchnia', bathroom: 'Łazienka', bedroom: 'Sypialnia', living: 'Salon',
+    counter: 'Blat', sink: 'Zlew', stove: 'Kuchenka', fridge: 'Lodówka', table: 'Stół', chair: 'Krzesło', cabinet: 'Szafka',
+    tub: 'Wanna', toilet: 'Toaleta', bsink: 'Umywalka', mirror: 'Lustro', towel: 'Ręczniki',
+    bed: 'Łóżko', dresser: 'Komoda', lamp: 'Lampa', rug: 'Dywan', wardrobe: 'Szafa',
+    sofa: 'Sofa', tv: 'TV', bookshelf: 'Regał', plant: 'Roślina', painting: 'Obraz',
+  };
+
+  function lang() { return localStorage.getItem(LANG_KEY) === 'pl' ? 'pl' : 'en'; }
+  function setLang(next) { localStorage.setItem(LANG_KEY, next === 'pl' ? 'pl' : 'en'); }
+  function t(key, ...args) {
+    const parts = key.split('.');
+    let value = UI[lang()];
+    parts.forEach((part) => { value = value && value[part]; });
+    if (value == null) {
+      value = UI.en;
+      parts.forEach((part) => { value = value && value[part]; });
+    }
+    return typeof value === 'function' ? value(...args) : value;
+  }
+  function name(item) { return lang() === 'pl' ? (PL_NAMES[item.id] || item.name) : item.name; }
   // ---- Shared colour swatches -------------------------------------------
   const HAIR_COLORS = [
     { id: 'purple', name: 'Purple', hex: '#a44cff' },
@@ -244,5 +403,6 @@ window.GameData = (function () {
     WARDROBE, BLOCKS, MATERIALS, ROOMS, HELP,
     HAIR_COLORS, SKIN_TONES, EYE_COLORS,
     defaultAvatar, hexToColor, pick,
+    lang, setLang, t, name,
   };
 })();

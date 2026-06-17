@@ -242,6 +242,92 @@ window.World = (function () {
     return mesh;
   }
 
+  /* ---------------- decorated structure blocks ----------------
+     A build cell that actually looks like what it is: a door has a
+     panel + handle, a window has a framed glass cross, a roof is a
+     little peaked tile. Walls and floors stay simple cubes.
+     Each returns a Group whose root carries the block; raycasting is
+     recursive so taps on a child resolve to the column via game.js. */
+  function makeStructureBlock(kind, hex) {
+    if (kind === 'door') return makeDoorBlock(hex);
+    if (kind === 'window') return makeWindowBlock(hex);
+    if (kind === 'roof') return makeRoofBlock(hex);
+    if (kind === 'floor') return makeFloorBlock(hex);
+    return makeBlock(1, hex);   // wall
+  }
+
+  function makeDoorBlock(hex) {
+    const g = new THREE.Group();
+    const body = makeBox(1, 1, 1, hex);
+    g.add(body);
+    // a recessed darker door slab + gold knob on the front and back faces
+    [0.5, -0.5].forEach((fz) => {
+      const slab = makeBox(0.62, 0.86, 0.08, '#73421f');
+      slab.position.set(0, -0.06, fz);
+      g.add(slab);
+      const knob = makeBox(0.1, 0.1, 0.1, '#ffd34d');
+      knob.position.set(fz > 0 ? 0.18 : -0.18, -0.06, fz > 0 ? 0.56 : -0.56);
+      g.add(knob);
+    });
+    return g;
+  }
+
+  function makeWindowBlock(hex) {
+    const g = new THREE.Group();
+    const frame = makeBox(1, 1, 1, '#f2f2f6');   // white frame cube
+    g.add(frame);
+    // glass pane + white cross on all four side faces
+    const faces = [
+      { axis: 'z', s: 0.5 }, { axis: 'z', s: -0.5 },
+      { axis: 'x', s: 0.5 }, { axis: 'x', s: -0.5 },
+    ];
+    faces.forEach(({ axis, s }) => {
+      const wide = axis === 'z';
+      const glass = makeBox(wide ? 0.74 : 0.08, 0.74, wide ? 0.08 : 0.74, hex);
+      glass.position[axis] = s + (s > 0 ? 0.01 : -0.01);
+      glass.userData.glass = true;
+      g.add(glass);
+      // muntins (cross bars)
+      const vBar = makeBox(wide ? 0.08 : 0.1, 0.74, wide ? 0.1 : 0.08, '#f2f2f6');
+      vBar.position[axis] = s + (s > 0 ? 0.02 : -0.02);
+      g.add(vBar);
+      const hBar = makeBox(wide ? 0.74 : 0.1, 0.08, wide ? 0.1 : 0.74, '#f2f2f6');
+      hBar.position[axis] = s + (s > 0 ? 0.02 : -0.02);
+      g.add(hBar);
+    });
+    return g;
+  }
+
+  function makeRoofBlock(hex) {
+    const g = new THREE.Group();
+    const base = makeBox(1, 0.2, 1, hex);
+    base.position.y = -0.4;
+    g.add(base);
+    const peak = new THREE.Mesh(
+      new THREE.ConeGeometry(0.72, 0.95, 4),
+      new THREE.MeshLambertMaterial({ color: D.hexToColor(hex) })
+    );
+    peak.rotation.y = Math.PI / 4;   // align the 4 sides with the cell
+    peak.position.y = 0.05;
+    peak.castShadow = true; peak.receiveShadow = true;
+    g.add(peak);
+    return g;
+  }
+
+  function makeFloorBlock(hex) {
+    const g = new THREE.Group();
+    const body = makeBox(1, 1, 1, hex);
+    g.add(body);
+    // a couple of plank grooves on the top face so floors read as floors
+    const dark = '#00000022';
+    for (const gx of [-0.28, 0.28]) {
+      const groove = makeBox(0.04, 0.02, 0.92, '#8a5a2c');
+      groove.position.set(gx, 0.5, 0);
+      g.add(groove);
+    }
+    return g;
+  }
+
   function add(obj) { scene.add(obj); return obj; }
   function remove(obj) {
     scene.remove(obj);
@@ -342,7 +428,7 @@ window.World = (function () {
 
   return {
     init, start, focusOn,
-    makeBlock, makeBox, add, remove, poof,
+    makeBlock, makeBox, makeStructureBlock, add, remove, poof,
     registerNightLight, registerLamp, addStreetLight,
     intersect, setTapHandler,
     getDaylight, setClock,
