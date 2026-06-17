@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon-192.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20260617" />
 </head>
 <body>
   <!-- The 3D world is drawn here, behind everything else -->
@@ -65,11 +65,11 @@
 
   <!-- Three.js r128 (UMD build) — bundled locally so the game works offline and inside the iOS app -->
   <script src="vendor/three.min.js"></script>
-  <!-- game code -->
-  <script src="src/data.js"></script>
-  <script src="src/sound.js"></script>
-  <script src="src/avatar.js"></script>
-  <script src="src/world.js"></script>
-  <script src="src/game.js"></script>
+  <!-- game code (bump ?v= on each release to bust the browser cache) -->
+  <script src="src/data.js?v=20260617"></script>
+  <script src="src/sound.js?v=20260617"></script>
+  <script src="src/avatar.js?v=20260617"></script>
+  <script src="src/world.js?v=20260617"></script>
+  <script src="src/game.js?v=20260617"></script>
 </body>
 </html>
