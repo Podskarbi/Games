@@ -17,6 +17,13 @@
     }
     h1 { font-size: clamp(2rem, 8vw, 3rem); margin: 0.2em 0; }
     p.sub { font-size: 1.2rem; margin: 0 0 28px; }
+    .lang-toggle {
+      display: inline-flex; align-items: center; justify-content: center;
+      margin: 0 auto 22px; padding: 10px 16px;
+      font: inherit; font-size: 1rem; font-weight: 800; color: var(--ink);
+      background: #fff; border: none; border-radius: 14px;
+      box-shadow: 0 5px 0 rgba(0,0,0,0.12); cursor: pointer;
+    }
     .grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 20px; max-width: 760px; margin: 0 auto;
@@ -67,6 +74,7 @@
 <body>
   <h1>Our Games 🎮</h1>
   <p class="sub">Made by Hania &amp; Wojtek 🐾</p>
+  <button id="lang-toggle" class="lang-toggle" type="button">🇵🇱 Polski</button>
 
   <div class="grid">
     <a class="game-card" href="animal-rescue/">
@@ -107,5 +115,94 @@
   </section>
 
   <footer>No ads · No logins · Safe &amp; kid-friendly</footer>
+  <script>
+    (function () {
+      const KEY = "kidsGamesLanguage";
+      const copy = {
+        en: {
+          toggle: "🇵🇱 Polski",
+          title: "Our Games 🎮",
+          sub: "Made by Hania & Wojtek 🐾",
+          animalTitle: "Animal Rescue Adventure",
+          animalSub: "Solve riddles and rescue the animals of Karandas!",
+          helmetTitle: "Helmet Heroes — Skate Park",
+          helmetSub: "Time your tricks and skate safe to win the high score!",
+          cityTitle: "New City — Build a Town",
+          citySub: "Smash old houses, build new ones and decorate a voxel city of idols!",
+          soonTitle: "More coming soon",
+          soonSub: "A new game will appear here.",
+          howTitle: "📲 Put a game on your iPad",
+          lead: "Each game can get its own icon, just like a real app. Do this once for each game:",
+          steps: [
+            "Open the game in <strong>Safari</strong> (tap its card above).",
+            "Tap the <strong>Share</strong> button <span class=\"share-ico\">⬆️</span> — a square with an arrow pointing up.",
+            "Scroll down the list and tap <strong>“Add to Home Screen.”</strong>",
+            "Tap <strong>Add</strong>. The game’s icon appears on your Home Screen and opens full-screen! 🎉",
+          ],
+          tip: "💡 Use <strong>Safari</strong> for this (not Chrome). Each game gets its own icon — so add both! 🐾🛹",
+          footer: "No ads · No logins · Safe & kid-friendly",
+        },
+        pl: {
+          toggle: "🇬🇧 English",
+          title: "Nasze Gry 🎮",
+          sub: "Stworzone przez Hanię i Wojtka 🐾",
+          animalTitle: "Przygoda Ratowania Zwierząt",
+          animalSub: "Rozwiązuj zagadki i ratuj zwierzęta z Karandas!",
+          helmetTitle: "Helmet Heroes — Skate Park",
+          helmetSub: "Wyliczaj tricki, jeździj bezpiecznie i pobij rekord!",
+          cityTitle: "Nowe Miasto — Zbuduj Miasteczko",
+          citySub: "Burz stare domy, buduj nowe i dekoruj voxelowe miasto idoli!",
+          soonTitle: "Więcej wkrótce",
+          soonSub: "Nowa gra pojawi się tutaj.",
+          howTitle: "📲 Dodaj grę na iPada",
+          lead: "Każda gra może mieć własną ikonę jak prawdziwa aplikacja. Zrób to raz dla każdej gry:",
+          steps: [
+            "Otwórz grę w <strong>Safari</strong> (stuknij kartę powyżej).",
+            "Stuknij przycisk <strong>Udostępnij</strong> <span class=\"share-ico\">⬆️</span> — kwadrat ze strzałką w górę.",
+            "Przewiń listę i stuknij <strong>„Dodaj do ekranu początkowego”.</strong>",
+            "Stuknij <strong>Dodaj</strong>. Ikona gry pojawi się na ekranie i otworzy się pełnoekranowo! 🎉",
+          ],
+          tip: "💡 Użyj <strong>Safari</strong> (nie Chrome). Każda gra dostaje własną ikonę. 🐾🛹",
+          footer: "Bez reklam · Bez logowania · Bezpieczne dla dzieci",
+        },
+      };
+      let lang = localStorage.getItem(KEY) === "pl" ? "pl" : "en";
+      const set = (selector, value, html) => {
+        const el = document.querySelector(selector);
+        if (!el) return;
+        if (html) el.innerHTML = value; else el.textContent = value;
+      };
+      function apply() {
+        const c = copy[lang];
+        document.documentElement.lang = lang;
+        set("#lang-toggle", c.toggle);
+        set("h1", c.title);
+        set(".sub", c.sub);
+        const cards = document.querySelectorAll(".game-card");
+        setCard(cards[0], c.animalTitle, c.animalSub);
+        setCard(cards[1], c.helmetTitle, c.helmetSub);
+        setCard(cards[2], c.cityTitle, c.citySub);
+        setCard(cards[3], c.soonTitle, c.soonSub);
+        set(".howto h2", c.howTitle);
+        set(".howto .lead", c.lead);
+        document.querySelectorAll(".howto li").forEach((li, i) => { li.innerHTML = c.steps[i]; });
+        set(".howto .tip", c.tip, true);
+        set("footer", c.footer);
+      }
+      function setCard(card, title, sub) {
+        if (!card) return;
+        const h = card.querySelector("h2");
+        const p = card.querySelector("p");
+        if (h) h.textContent = title;
+        if (p) p.textContent = sub;
+      }
+      document.getElementById("lang-toggle").addEventListener("click", () => {
+        lang = lang === "pl" ? "en" : "pl";
+        localStorage.setItem(KEY, lang);
+        apply();
+      });
+      apply();
+    })();
+  </script>
 </body>
 </html>

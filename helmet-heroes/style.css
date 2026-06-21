@@ -46,6 +46,7 @@ html, body {
 .ctrl-btn:active { transform: translateY(3px); box-shadow: 0 6px 0 rgba(0,0,0,0.28); }
 a.ctrl-btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
 .exit-ctrl { background: #ff5a3c; }
+.lang-toggle { background: #eef3ff; color: var(--ink); }
 .ctrl-btn.off { background: var(--red); }
 .ctrl-btn.alert { background: var(--red); animation: ctrlpulse 0.4s ease-in-out infinite; }
 @keyframes ctrlpulse {

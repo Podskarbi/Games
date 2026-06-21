@@ -114,6 +114,7 @@ h2 { font-size: clamp(1.5rem, 6vw, 2.2rem); text-align: center; margin: 0.3em 0 
 .navbtn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.12); }
 a.navbtn { text-decoration: none; display: inline-flex; align-items: center; }
 .exit-btn { background: #ffc1b4; }
+.lang-toggle { background: #eef3ff; color: #2e5ca8; }
 #rescue-count {
   margin-left: auto;
   font-weight: 800;

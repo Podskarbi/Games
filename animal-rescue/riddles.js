@@ -27,6 +27,14 @@ const RIDDLES = [
     animal: "panda",
     emoji: "🐼",
     badge: "Panda Pal",
+    pl: {
+      riddleText: "Jestem gorące i żółte, wysoko na niebie.\nBudzę poranek i patrzę na dzień.\nCzym jestem?",
+      answer: "słońce",
+      hint: "Spójrz w górę w jasny dzień — ono cię ogrzewa!",
+      location: "park",
+      animal: "pandę",
+      badge: "Przyjaciel Pandy",
+    },
   },
   {
     id: 2,
@@ -38,6 +46,14 @@ const RIDDLES = [
     animal: "dog",
     emoji: "🐶",
     badge: "Doggo Buddy",
+    pl: {
+      riddleText: "Ciepły i złoty, miękki do jedzenia,\nPiekarz robi mnie jako smakołyk.\nZ masłem na wierzchu smakuję słodko.\nCzym jestem?",
+      answer: "chleb",
+      hint: "Znajdziesz mnie świeżego i ciepłego w piekarni.",
+      location: "piekarnia",
+      animal: "pieska",
+      badge: "Kumpel Pieska",
+    },
   },
   {
     id: 3,
@@ -49,6 +65,14 @@ const RIDDLES = [
     animal: "turtle",
     emoji: "🐢",
     badge: "Turtle Friend",
+    pl: {
+      riddleText: "Pluskam i błyszczę, chłodna i przejrzysta,\nSkaczę wysoko, a potem znikam.\nW fontannie tańczę cały dzień.\nCzym jestem?",
+      answer: "woda",
+      hint: "Jest mokra, pijesz ją, a ryby w niej pływają.",
+      location: "fontanna",
+      animal: "żółwia",
+      badge: "Przyjaciel Żółwia",
+    },
   },
   {
     id: 4,
@@ -60,6 +84,14 @@ const RIDDLES = [
     animal: "parrot",
     emoji: "🦜",
     badge: "Parrot Pal",
+    pl: {
+      riddleText: "Mam wiele stron, ale nie jestem drzewem.\nOtwórz mnie i czytaj razem ze mną.\nW środku ukrywa się historia!\nCzym jestem?",
+      answer: "książka",
+      hint: "Dużo takich znajdziesz w bibliotece.",
+      location: "biblioteka",
+      animal: "papugę",
+      badge: "Przyjaciel Papugi",
+    },
   },
   {
     id: 5,
@@ -71,6 +103,14 @@ const RIDDLES = [
     animal: "cat",
     emoji: "🐱",
     badge: "Kitty Companion",
+    pl: {
+      riddleText: "Jestem wysokie i zielone, z liśćmi na górze.\nPtaki i wiewiórki skaczą po mnie.\nPo moich gałęziach można się wspinać!\nCzym jestem?",
+      answer: "drzewo",
+      hint: "Jest wysokie, ma liście i można się na nie wspinać.",
+      location: "domek na drzewie",
+      animal: "kotka",
+      badge: "Towarzysz Kotka",
+    },
   },
   {
     id: 6,
@@ -82,6 +122,14 @@ const RIDDLES = [
     animal: "rabbit",
     emoji: "🐰",
     badge: "Bunny Buddy",
+    pl: {
+      riddleText: "Mam kolorowe płatki i słodki zapach.\nMieszkam w ogrodzie pełnym pszczół.\nCzym jestem?",
+      answer: "kwiat",
+      hint: "Pszczoły mnie lubią, jestem ładny i rosnę w ogrodzie.",
+      location: "ogród",
+      animal: "królika",
+      badge: "Kumpel Królika",
+    },
   },
   {
     id: 7,
@@ -93,6 +141,14 @@ const RIDDLES = [
     animal: "duck",
     emoji: "🦆",
     badge: "Ducky Pal",
+    pl: {
+      riddleText: "Pływam po stawie i przewożę cię na drugą stronę.\nZ wiosłem nigdy się nie zgubisz.\nCzym jestem?",
+      answer: "łódka",
+      hint: "Siedzisz we mnie, gdy płyniesz po wodzie.",
+      location: "staw",
+      animal: "kaczkę",
+      badge: "Przyjaciel Kaczki",
+    },
   },
   {
     id: 8,
@@ -104,6 +160,14 @@ const RIDDLES = [
     animal: "mouse",
     emoji: "🐭",
     badge: "Mouse Mate",
+    pl: {
+      riddleText: "Jestem żółty i mam dziurki, pyszna przekąska.\nMyszka chętnie zabrałaby mnie do domu.\nCzym jestem?",
+      answer: "ser",
+      hint: "Myszy uwielbiają to żółte jedzenie — znajdziesz je na targu.",
+      location: "targ",
+      animal: "myszkę",
+      badge: "Kolega Myszki",
+    },
   },
   {
     id: 9,
@@ -115,6 +179,14 @@ const RIDDLES = [
     animal: "hedgehog",
     emoji: "🦔",
     badge: "Hedgehog Hero",
+    pl: {
+      riddleText: "Latem jestem zielony, a jesienią czerwony.\nSpadam z wysokiego drzewa na ziemię.\nCzym jestem?",
+      answer: "liść",
+      hint: "Rosnę na drzewach, a jesienią grabisz mnie w kopce.",
+      location: "las",
+      animal: "jeża",
+      badge: "Bohater Jeża",
+    },
   },
   {
     id: 10,
@@ -126,6 +198,14 @@ const RIDDLES = [
     animal: "owl",
     emoji: "🦉",
     badge: "Owl Friend",
+    pl: {
+      riddleText: "Świecę nocą, wysoko na niebie.\nJestem okrągły i biały, gdy chmury płyną obok.\nCzym jestem?",
+      answer: "księżyc",
+      hint: "Widzisz mnie nocą, gdy jest ciemno.",
+      location: "wzgórze",
+      animal: "sowę",
+      badge: "Przyjaciel Sowy",
+    },
   },
 ];
 

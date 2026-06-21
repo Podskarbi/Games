@@ -8,6 +8,131 @@
 
   /* ---------- Saved data ---------- */
   const SAVE_KEY = "animalRescueSave_v1";
+  const LANG_KEY = "kidsGamesLanguage";
+  const TEXT = {
+    en: {
+      navMap: "🗺️ Map",
+      navAvatar: "🧑‍🎨 Avatar",
+      navBadges: "🏅 Badges",
+      exit: "🏠 Exit",
+      backAll: "← Back to all games",
+      langToggle: "🇵🇱 Polski",
+      title: "Animal Rescue<br />Adventure",
+      subtitle: "The animals of <strong>Karandas</strong> have wandered off!<br />Solve riddles with Detective Whiskers and bring them home. 🐱🔎",
+      start: "Start the Adventure!",
+      reset: "Start over from the beginning",
+      avatarTitle: "Make Your Hero!",
+      hero: "Hero",
+      skin: "Skin",
+      hairStyle: "Hair style",
+      hairColor: "Hair color",
+      shirt: "Shirt",
+      face: "Face",
+      avatarDone: "That's me! Let's go 🐾",
+      detective: "Detective Whiskers",
+      answerPrompt: "Tap your answer:",
+      mapTitle: "Map of Karandas",
+      mapHelp: "Solve riddles to light up new places. ✨",
+      backDetective: "Back to Detective Whiskers 🔎",
+      badgesTitle: "My Rescue Badges",
+      badgesHelp: "A sticker for every animal you bring home. 🏅",
+      backAdventure: "Back to the adventure 🐾",
+      endingTitle: "You did it! 🎉",
+      endingSub: "Every animal in Karandas is home and safe. Now everyone plays together in the sunshine!",
+      seeBadges: "See my badges 🏅",
+      playAgain: "Play again",
+      firstTrail: "Detective Whiskers picks up the first trail…",
+      allHome: "Every animal is home — hooray!",
+      searching: (done, total) => `Searching Karandas — ${done} of ${total} animals rescued`,
+      clue: (n, total) => `Clue ${n} of ${total}`,
+      hintBtn: "Need a hint? 🔎",
+      wrong: ["Not quite — try again! 💪", "Oops, try another!", "Hmm, pick a different one!"],
+      correct: ["Correct! 🎉", "Hooray! 🎉", "You got it! ⭐"],
+      rescued: (animal) => `You rescued the ${animal}!`,
+      bigSurprise: "See the big surprise →",
+      nextClue: "Next clue →",
+      searchingMap: "Searching…",
+      rescuedCount: (done, total) => `${done} / ${total} rescued`,
+      confirmReset: "Start the whole adventure over? Your badges will be cleared.",
+      hintPrefix: "🐱 Detective Whiskers says: ",
+      genderBoy: "🧒 Boy",
+      genderGirl: "👧 Girl",
+      hairShort: "Short",
+      hairSwoosh: "Swoosh",
+      hairCurly: "Curly",
+      hairPonytail: "Ponytail",
+      hairBun: "Bun",
+      hairLong: "Long",
+      hairBald: "Bald",
+    },
+    pl: {
+      navMap: "🗺️ Mapa",
+      navAvatar: "🧑‍🎨 Bohater",
+      navBadges: "🏅 Odznaki",
+      exit: "🏠 Wyjdź",
+      backAll: "← Powrót do gier",
+      langToggle: "🇬🇧 English",
+      title: "Przygoda<br />Ratowania Zwierząt",
+      subtitle: "Zwierzęta z <strong>Karandas</strong> gdzieś się zgubiły!<br />Rozwiązuj zagadki z Detektywem Wąsikiem i sprowadź je do domu. 🐱🔎",
+      start: "Zacznij przygodę!",
+      reset: "Zacznij od początku",
+      avatarTitle: "Stwórz bohatera!",
+      hero: "Bohater",
+      skin: "Skóra",
+      hairStyle: "Fryzura",
+      hairColor: "Kolor włosów",
+      shirt: "Koszulka",
+      face: "Mina",
+      avatarDone: "To ja! Ruszamy 🐾",
+      detective: "Detektyw Wąsik",
+      answerPrompt: "Wybierz odpowiedź:",
+      mapTitle: "Mapa Karandas",
+      mapHelp: "Rozwiązuj zagadki, żeby rozświetlać nowe miejsca. ✨",
+      backDetective: "Wróć do Detektywa Wąsika 🔎",
+      badgesTitle: "Moje odznaki ratownika",
+      badgesHelp: "Naklejka za każde zwierzątko, które wróci do domu. 🏅",
+      backAdventure: "Wróć do przygody 🐾",
+      endingTitle: "Udało się! 🎉",
+      endingSub: "Wszystkie zwierzęta w Karandas są bezpieczne w domu. Teraz wszyscy bawią się razem w słońcu!",
+      seeBadges: "Zobacz moje odznaki 🏅",
+      playAgain: "Zagraj jeszcze raz",
+      firstTrail: "Detektyw Wąsik znajduje pierwszy trop…",
+      allHome: "Wszystkie zwierzęta są w domu — hura!",
+      searching: (done, total) => `Szukamy w Karandas — uratowano ${done} z ${total} zwierząt`,
+      clue: (n, total) => `Zagadka ${n} z ${total}`,
+      hintBtn: "Potrzebujesz podpowiedzi? 🔎",
+      wrong: ["Nie całkiem — spróbuj jeszcze raz! 💪", "Ups, wybierz inną!", "Hmm, spróbuj innej odpowiedzi!"],
+      correct: ["Dobrze! 🎉", "Hura! 🎉", "Masz to! ⭐"],
+      rescued: (animal) => `Uratowano ${animal}!`,
+      bigSurprise: "Zobacz wielką niespodziankę →",
+      nextClue: "Następna zagadka →",
+      searchingMap: "Szukamy…",
+      rescuedCount: (done, total) => `${done} / ${total} uratowano`,
+      confirmReset: "Zacząć całą przygodę od początku? Odznaki zostaną wyczyszczone.",
+      hintPrefix: "🐱 Detektyw Wąsik mówi: ",
+      genderBoy: "🧒 Chłopiec",
+      genderGirl: "👧 Dziewczynka",
+      hairShort: "Krótkie",
+      hairSwoosh: "Na bok",
+      hairCurly: "Kręcone",
+      hairPonytail: "Kucyk",
+      hairBun: "Kok",
+      hairLong: "Długie",
+      hairBald: "Łysa głowa",
+    },
+  };
+
+  let lang = localStorage.getItem(LANG_KEY) === "pl" ? "pl" : "en";
+  const t = (key, ...args) => {
+    const value = (TEXT[lang] && TEXT[lang][key]) || TEXT.en[key] || key;
+    return typeof value === "function" ? value(...args) : value;
+  };
+  const rText = (r, key) => (lang === "pl" && r.pl && r.pl[key]) ? r.pl[key] : r[key];
+  const setText = (selector, key, html) => {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    if (html) el.innerHTML = t(key); else el.textContent = t(key);
+  };
 
   const defaultState = () => ({
     started: false,
@@ -38,18 +163,18 @@
   }
 
   /* ---------- Option lists for the avatar ---------- */
-  const GENDERS = [{ id: "boy", label: "🧒 Boy" }, { id: "girl", label: "👧 Girl" }];
+  const GENDERS = [{ id: "boy", labelKey: "genderBoy" }, { id: "girl", labelKey: "genderGirl" }];
   const SKINS = ["#ffe0bd", "#f3c39a", "#e0ac82", "#c68642", "#8d5524", "#5c3a1e"];
   const HAIR_COLORS = ["#2b2b2b", "#5a3a2a", "#a8642a", "#e3b34d", "#d94f8a", "#5b8cff", "#e8e8e8"];
   const SHIRTS = ["#ff8fb1", "#b58cff", "#ff9f4a", "#5bd1c0", "#6fc36b", "#ffd93b", "#ff5a5a", "#4aa6f5"];
   const HAIR_STYLES = [
-    { id: "short", label: "Short" },
-    { id: "swoosh", label: "Swoosh" },
-    { id: "curly", label: "Curly" },
-    { id: "ponytail", label: "Ponytail" },
-    { id: "bun", label: "Bun" },
-    { id: "long", label: "Long" },
-    { id: "none", label: "Bald" },
+    { id: "short", labelKey: "hairShort" },
+    { id: "swoosh", labelKey: "hairSwoosh" },
+    { id: "curly", labelKey: "hairCurly" },
+    { id: "ponytail", labelKey: "hairPonytail" },
+    { id: "bun", labelKey: "hairBun" },
+    { id: "long", labelKey: "hairLong" },
+    { id: "none", labelKey: "hairBald" },
   ];
   const FACES = [
     { id: "happy", label: "😊" },
@@ -228,7 +353,7 @@
     options.forEach((o) => {
       const b = document.createElement("button");
       b.className = "chip" + (state.avatar[part] === o.id ? " selected" : "");
-      b.textContent = o.label;
+      b.textContent = o.labelKey ? t(o.labelKey) : o.label;
       b.addEventListener("click", () => {
         state.avatar[part] = o.id;
         save();
@@ -258,8 +383,8 @@
   function buildChoices(r) {
     const others = riddles
       .filter((x) => x.id !== r.id)
-      .map((x) => x.answer)
-      .filter((a) => a.toLowerCase() !== r.answer.toLowerCase());
+      .map((x) => rText(x, "answer"))
+      .filter((a) => a.toLowerCase() !== rText(r, "answer").toLowerCase());
     // shuffle the distractor pool and take two unique ones
     for (let i = others.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -270,7 +395,7 @@
       if (wrongs.length >= 2) break;
       if (!wrongs.some((x) => x.toLowerCase() === w.toLowerCase())) wrongs.push(w);
     }
-    const choices = [{ text: r.answer, correct: true }]
+    const choices = [{ text: rText(r, "answer"), correct: true }]
       .concat(wrongs.map((w) => ({ text: w, correct: false })));
     // shuffle the final three
     for (let i = choices.length - 1; i > 0; i--) {
@@ -471,9 +596,9 @@
     const el = document.getElementById("loc-now");
     if (!el) return;
     const total = riddles.length, done = rescuedCount();
-    if (done === 0) el.textContent = "Detective Whiskers picks up the first trail…";
-    else if (done >= total) el.textContent = "Every animal is home — hooray!";
-    else el.textContent = `Searching Karandas — ${done} of ${total} animals rescued`;
+    if (done === 0) el.textContent = t("firstTrail");
+    else if (done >= total) el.textContent = t("allHome");
+    else el.textContent = t("searching", done, total);
   }
 
   function renderRiddle() {
@@ -496,9 +621,9 @@
       return;
     }
     document.getElementById("riddle-progress").textContent =
-      `Clue ${rescuedCount() + 1} of ${riddles.length}`;
-    document.getElementById("riddle-text").textContent = r.riddleText;
-    document.getElementById("btn-hint").textContent = "Need a hint? 🔎";
+      t("clue", rescuedCount() + 1, riddles.length);
+    document.getElementById("riddle-text").textContent = rText(r, "riddleText");
+    document.getElementById("btn-hint").textContent = t("hintBtn");
     // Vary the backdrop each clue so the city feels alive (street → park → plaza).
     document.getElementById("city-art").innerHTML = buildScene(SCENE_TYPES[rescuedCount() % SCENE_TYPES.length]);
 
@@ -523,7 +648,7 @@
       // Gently mark the wrong choice and let them try another.
       btn.classList.add("wrong");
       btn.disabled = true;
-      fb.textContent = pick(["Not quite — try again! 💪", "Oops, try another!", "Hmm, pick a different one!"]);
+      fb.textContent = pick(t("wrong"));
       fb.className = "feedback try";
     }
   }
@@ -537,11 +662,11 @@
 
   function celebrate(r) {
     document.getElementById("celebrate-emoji").textContent = r.emoji;
-    document.getElementById("celebrate-title").textContent = pick(["Correct! 🎉", "Hooray! 🎉", "You got it! ⭐"]);
-    document.getElementById("celebrate-text").textContent = `You rescued the ${r.animal}!`;
-    document.getElementById("celebrate-badge").textContent = "🏅 " + r.badge;
+    document.getElementById("celebrate-title").textContent = pick(t("correct"));
+    document.getElementById("celebrate-text").textContent = t("rescued", rText(r, "animal"));
+    document.getElementById("celebrate-badge").textContent = "🏅 " + rText(r, "badge");
     const nextBtn = document.getElementById("btn-celebrate-next");
-    nextBtn.textContent = allDone() ? "See the big surprise →" : "Next clue →";
+    nextBtn.textContent = allDone() ? t("bigSurprise") : t("nextClue");
     celebrateEl.classList.remove("hidden");
     updateRescueCount();
   }
@@ -621,7 +746,7 @@
         <circle class="map-pulse" cx="${L.x}" cy="${L.y - 6}" r="40" fill="#ffd93b"/>
         <rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="15" fill="#fffdf2" stroke="#ffb02e" stroke-width="4"/>
         <text x="${L.x}" y="${L.y + 8}" font-size="40" text-anchor="middle">🔎</text>
-        <text x="${L.x}" y="${y0 + h + 17}" font-size="14" font-weight="800" text-anchor="middle" fill="#c77b00">Searching…</text>
+        <text x="${L.x}" y="${y0 + h + 17}" font-size="14" font-weight="800" text-anchor="middle" fill="#c77b00">${t("searchingMap")}</text>
       </g>`;
     }
     return `<g opacity="0.92">
@@ -631,7 +756,7 @@
   }
 
   // Show the place name only once it's rescued (don't spoil the riddle).
-  function L_name(r) { return r.location; }
+  function L_name(r) { return rText(r, "location"); }
 
   function buildCityMap() {
     let roads = "", roadsDash = "";
@@ -688,7 +813,7 @@
       card.className = "badge-card" + (done ? "" : " empty");
       card.innerHTML = `
         <span class="badge-emoji">${done ? r.emoji : "🔒"}</span>
-        <div class="badge-name">${done ? r.badge : "???"}</div>`;
+        <div class="badge-name">${done ? rText(r, "badge") : "???"}</div>`;
       grid.appendChild(card);
     });
   }
@@ -725,7 +850,7 @@
 
   function updateRescueCount() {
     const el = document.getElementById("rescue-count");
-    if (el) el.textContent = `${rescuedCount()} / ${riddles.length} rescued`;
+    if (el) el.textContent = t("rescuedCount", rescuedCount(), riddles.length);
   }
 
   // Title screen buttons
@@ -737,7 +862,7 @@
   });
 
   document.getElementById("btn-reset").addEventListener("click", () => {
-    if (confirm("Start the whole adventure over? Your badges will be cleared.")) {
+    if (confirm(t("confirmReset"))) {
       state = defaultState();
       save();
       show("title");
@@ -750,7 +875,7 @@
     const r = currentRiddle();
     if (!r) return;
     const hint = document.getElementById("hint-text");
-    hint.textContent = "🐱 Detective Whiskers says: " + r.hint;
+    hint.textContent = t("hintPrefix") + rText(r, "hint");
     hint.classList.add("show");
   });
 
@@ -763,6 +888,7 @@
 
   /* ---------- Start where the player left off ---------- */
   function boot() {
+    applyLanguage();
     renderAvatarInto(document.getElementById("avatar-preview"), true);
     document.getElementById("city-art").innerHTML = buildScene("street");
     document.getElementById("detective-art").innerHTML = buildDetective();
@@ -771,6 +897,56 @@
     else show("game");
     updateRescueCount();
   }
+
+  function applyLanguage() {
+    document.documentElement.lang = lang;
+    setText("#topbar [data-go='map']", "navMap");
+    setText("#topbar [data-go='avatar']", "navAvatar");
+    setText("#topbar [data-go='badges']", "navBadges");
+    setText(".exit-btn", "exit");
+    setText("#screen-title h1", "title", true);
+    setText("#screen-title .subtitle", "subtitle", true);
+    setText("#btn-start", "start");
+    setText("#btn-reset", "reset");
+    setText("#screen-title a.linkbtn", "backAll");
+    setText("#screen-avatar h2", "avatarTitle");
+    const labels = ["hero", "skin", "hairStyle", "hairColor", "shirt", "face"];
+    document.querySelectorAll(".picker-label").forEach((el, i) => { el.textContent = t(labels[i]); });
+    setText("#btn-avatar-done", "avatarDone");
+    setText(".detective-name", "detective");
+    setText(".answer-prompt", "answerPrompt");
+    setText("#screen-map h2", "mapTitle");
+    setText("#screen-map .map-help", "mapHelp");
+    setText("#screen-map .back-btn", "backDetective");
+    setText("#screen-badges h2", "badgesTitle");
+    setText("#screen-badges .map-help", "badgesHelp");
+    setText("#screen-badges .back-btn", "backAdventure");
+    setText("#screen-ending h1", "endingTitle");
+    setText("#screen-ending .subtitle", "endingSub");
+    setText("#screen-ending [data-go='badges']", "seeBadges");
+    setText("#btn-play-again", "playAgain");
+    setText("#lang-toggle", "langToggle");
+    setText("#lang-toggle-title", "langToggle");
+    document.querySelectorAll(".exit-btn").forEach((el) => { el.title = t("backAll"); });
+    renderAvatar();
+    updateLocationStrip();
+    updateRescueCount();
+  }
+
+  function toggleLanguage() {
+    lang = lang === "pl" ? "en" : "pl";
+    localStorage.setItem(LANG_KEY, lang);
+    applyLanguage();
+    if (screens.game && screens.game.classList.contains("active")) renderRiddle();
+    if (screens.map && screens.map.classList.contains("active")) renderMap();
+    if (screens.badges && screens.badges.classList.contains("active")) renderBadges();
+    if (screens.ending && screens.ending.classList.contains("active")) runEnding();
+  }
+
+  ["lang-toggle", "lang-toggle-title"].forEach((id) => {
+    const b = document.getElementById(id);
+    if (b) b.addEventListener("click", toggleLanguage);
+  });
 
   boot();
 })();
