@@ -16,16 +16,197 @@
     skaterX: 0.30,           // skater horizontal position (fraction of width)
     reticleLead: 1.05,       // seconds before the tap the ring appears
     staminaStart: 100,
-    staminaMissHelmet: 6,
-    staminaMissNoHelmet: 22,
-    helmetlessDrain: 2.0,    // stamina/sec lost while helmet is OFF (gentle pressure)
+    staminaMissHelmet: 2,    // gentle wobble cost — a run lasts well over a minute
+    staminaMissNoHelmet: 10, // helmet-off slip: still costly, but the cop catches you first
+    helmetlessDrain: 1.0,    // stamina/sec lost while helmet is OFF (gentle pressure)
     landsPerLevel: 8,
-    chaseStartDelay: 2.5,    // seconds helmetless before the cop appears
-    chaseClose: 70,          // px/sec the cop gains while you're helmetless
+    chaseStartDelay: 1.5,    // seconds helmetless before the cop appears
+    chaseStartGap: 0.40,     // cop's starting gap (fraction of width) — small, so it's on screen
+    chaseClose: 50,          // px/sec the cop gains while you're helmetless
     chaseFlee: 175,          // px/sec the cop drops back once helmet is back on
   };
 
-  const LEVEL_TITLES = ["Mellow Lines", "Steeper Ramps!", "Rail Grind Run", "Pro Park", "Legend Lines"];
+  const LANG_KEY = "kidsGamesLanguage";
+  let lang = localStorage.getItem(LANG_KEY) === "pl" ? "pl" : "en";
+  const TEXT = {
+    en: {
+      langToggle: "🇵🇱 Polski",
+      langShort: "PL",
+      title: "Helmet Heroes",
+      controlHint: "👆 Tap when the ring lines up to do a trick &nbsp;•&nbsp; 🪖 Keep your helmet ON",
+      sub: "Roll, time your tricks, and rack up points.<br /><strong>Wearing your helmet is how you win!</strong>",
+      play: "Skate! 🛹",
+      how: "How to play",
+      backAll: "← Back to all games",
+      howTitle: "How to Play",
+      howItems: [
+        "🛹 You skate forward by yourself.",
+        "👆 <strong>Tap</strong> (or press <strong>Space</strong>) when the shrinking ring lines up with the glowing target to land a trick.",
+        "🪖 <strong>Helmet ON</strong>: clean tricks give points <em>and</em> stamina. A missed trick is just a small wobble.",
+        "😬 <strong>Helmet OFF</strong>: a missed trick is a big wipeout — and a police skater starts chasing you!",
+        "🔋 Keep the <strong>stamina bar</strong> out of the red. Combos build a multiplier and a \"second wind.\"",
+        "⚡ <strong>Helmet flew off!</strong> Sometimes your helmet pops off — quickly tap the <strong>🪖 button</strong> (or press <strong>H</strong>) to put it back on. The <strong>faster</strong> you are, the more energy you get back!",
+      ],
+      gotIt: "Got it!",
+      makeSkater: "Make Your Skater!",
+      hero: "Hero",
+      ride: "Ride",
+      skin: "Skin",
+      hair: "Hair",
+      hairColor: "Hair color",
+      shirt: "Shirt",
+      face: "Face",
+      helmet: "🪖 Helmet",
+      board: "🛹 Board",
+      startRun: "Start Skating! 🤙",
+      keepSkating: "Keep Skating! 🛹",
+      score: "Score:",
+      skateAgain: "Skate Again 🛹",
+      changeGear: "Change gear",
+      exit: "🏠 Exit to Games",
+      bestScore: (score) => "Best score: " + score,
+      level: (n) => "Level " + n,
+      levelTitles: ["Mellow Lines", "Steeper Ramps!", "Rail Grind Run", "Pro Park", "Legend Lines"],
+      grounded: "GROUNDED!",
+      outStamina: "Out of Stamina!",
+      groundedText: "The police skater caught you. Keep your helmet on to stay in the game!",
+      staminaText: "Your stamina ran out. Land clean tricks with your helmet on to keep it up!",
+      momThrew: (item) => "Mum threw your " + item + " out the window! 😱",
+      itemComputer: "computer",
+      itemPs5: "PlayStation 5",
+      newBest: "🏆 New best!",
+      best: (score) => "Best: " + score,
+      unlocked: (items) => "🔓 Unlocked: " + items,
+      putItOn: "🪖 PUT IT ON!",
+      helmetOn: "🪖 Helmet: ON",
+      helmetOff: "😣 Helmet: OFF",
+      escaping: "Helmet on — escaping!",
+      helmetFlew: "⚠️ HELMET FLEW OFF!",
+      tooSlow: "Too slow! Helmet still off! 😬",
+      niceSave: (reward) => "NICE SAVE! +" + reward + " ⚡",
+      fastSave: (reward, fast) => (fast ? "LIGHTNING FAST! " : "Saved! ") + "+" + reward + " energy ⚡",
+      escaped: "ESCAPED! 🤙",
+      putHelmetOn: "🚨 Put your helmet ON!",
+      tap: "TAP!",
+      challengeTitle: "⚠️ Helmet flew off!",
+      challengeHint: "Tap 🪖 (or press H) — FAST!",
+      stamina: "🔋 STAMINA",
+      combo: (n) => n + " combo",
+      paused: "Paused",
+      unpause: "Tap ⏸ to keep skating",
+      perfect: "PERFECT! ",
+      wobble: "Wobble!",
+      wipeout: "WIPEOUT! 💫",
+      secondWind: "SECOND WIND! 🔋",
+      comboFlash: (n) => "x" + n + " COMBO!",
+      genderBoy: "🧒 Boy",
+      genderGirl: "👧 Girl",
+      skateboard: "🛹 Skateboard",
+      scooter: "🛴 Scooter",
+      hairShort: "Short",
+      hairSwoosh: "Swoosh",
+      hairCurly: "Curly",
+      hairPonytail: "Ponytail",
+      hairBun: "Bun",
+      hairLong: "Long",
+      hairBald: "Bald",
+    },
+    pl: {
+      langToggle: "🇬🇧 English",
+      langShort: "EN",
+      title: "Bohaterowie w Kaskach",
+      controlHint: "👆 Kliknij, gdy pierścień się wyrówna &nbsp;•&nbsp; 🪖 Trzymaj kask NA GŁOWIE",
+      sub: "Jedź, wyczuj tricki i zbieraj punkty.<br /><strong>Wygrywasz dzięki jeździe w kasku!</strong>",
+      play: "Jedziemy! 🛹",
+      how: "Jak grać",
+      backAll: "← Powrót do gier",
+      howTitle: "Jak grać",
+      howItems: [
+        "🛹 Jedziesz do przodu automatycznie.",
+        "👆 <strong>Kliknij</strong> (albo naciśnij <strong>Spację</strong>), gdy kurczący się pierścień trafi w świecący cel.",
+        "🪖 <strong>Kask ZAŁOŻONY</strong>: czyste tricki dają punkty <em>i</em> energię. Pudło to tylko małe zachwianie.",
+        "😬 <strong>Kask ZDJĘTY</strong>: pudło to wielka wywrotka — i zaczyna cię gonić skater-policjant!",
+        "🔋 Pilnuj, żeby pasek <strong>energii</strong> nie spadł do czerwonego. Kombosy budują mnożnik i \"drugi oddech\".",
+        "⚡ <strong>Kask spadł!</strong> Czasem kask wyskoczy — szybko kliknij przycisk <strong>🪖</strong> (albo <strong>H</strong>), żeby go założyć. Im szybciej, tym więcej energii wraca!",
+      ],
+      gotIt: "Jasne!",
+      makeSkater: "Stwórz skatera!",
+      hero: "Bohater",
+      ride: "Pojazd",
+      skin: "Skóra",
+      hair: "Włosy",
+      hairColor: "Kolor włosów",
+      shirt: "Koszulka",
+      face: "Mina",
+      helmet: "🪖 Kask",
+      board: "🛹 Deska",
+      startRun: "Start jazdy! 🤙",
+      keepSkating: "Jedź dalej! 🛹",
+      score: "Wynik:",
+      skateAgain: "Jedź jeszcze raz 🛹",
+      changeGear: "Zmień sprzęt",
+      exit: "🏠 Wyjdź do gier",
+      bestScore: (score) => "Najlepszy wynik: " + score,
+      level: (n) => "Poziom " + n,
+      levelTitles: ["Spokojne linie", "Stromsze rampy!", "Jazda po railach", "Pro Park", "Legendarne linie"],
+      grounded: "SZLABAN!",
+      outStamina: "Koniec energii!",
+      groundedText: "Skater-policjant cię złapał. Trzymaj kask na głowie, żeby zostać w grze!",
+      staminaText: "Skończyła się energia. Ląduj czyste tricki w kasku, żeby ją utrzymać!",
+      momThrew: (item) => "Mama wyrzuciła twój " + item + " przez okno! 😱",
+      itemComputer: "komputer",
+      itemPs5: "PlayStation 5",
+      newBest: "🏆 Nowy rekord!",
+      best: (score) => "Rekord: " + score,
+      unlocked: (items) => "🔓 Odblokowano: " + items,
+      putItOn: "🪖 ZAŁÓŻ GO!",
+      helmetOn: "🪖 Kask: ZAŁOŻONY",
+      helmetOff: "😣 Kask: ZDJĘTY",
+      escaping: "Kask założony — uciekasz!",
+      helmetFlew: "⚠️ KASK SPADŁ!",
+      tooSlow: "Za wolno! Kask dalej zdjęty! 😬",
+      niceSave: (reward) => "DOBRA AKCJA! +" + reward + " ⚡",
+      fastSave: (reward, fast) => (fast ? "BŁYSKAWICZNIE! " : "Uratowane! ") + "+" + reward + " energii ⚡",
+      escaped: "UCIECZKA! 🤙",
+      putHelmetOn: "🚨 Załóż kask!",
+      tap: "KLIK!",
+      challengeTitle: "⚠️ Kask spadł!",
+      challengeHint: "Kliknij 🪖 (albo H) — SZYBKO!",
+      stamina: "🔋 ENERGIA",
+      combo: (n) => n + " combo",
+      paused: "Pauza",
+      unpause: "Kliknij ⏸, żeby jechać dalej",
+      perfect: "IDEALNIE! ",
+      wobble: "Zachwianie!",
+      wipeout: "WYWROTKA! 💫",
+      secondWind: "DRUGI ODDECH! 🔋",
+      comboFlash: (n) => "x" + n + " COMBO!",
+      genderBoy: "🧒 Chłopiec",
+      genderGirl: "👧 Dziewczynka",
+      skateboard: "🛹 Deskorolka",
+      scooter: "🛴 Hulajnoga",
+      hairShort: "Krótkie",
+      hairSwoosh: "Na bok",
+      hairCurly: "Kręcone",
+      hairPonytail: "Kucyk",
+      hairBun: "Kok",
+      hairLong: "Długie",
+      hairBald: "Łysa głowa",
+    },
+  };
+  const t = (key, ...args) => {
+    const value = (TEXT[lang] && TEXT[lang][key]) || TEXT.en[key] || key;
+    return typeof value === "function" ? value(...args) : value;
+  };
+  const itemName = (item) => (lang === "pl" && item.pl) ? item.pl : item.name;
+  const factText = (fact) => typeof fact === "string" ? fact : (fact[lang] || fact.en);
+  const setText = (selector, key, html) => {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    if (html) el.innerHTML = t(key); else el.textContent = t(key);
+  };
+
+  const LEVEL_TITLES = () => t("levelTitles");
 
   // ---------- Save data ----------
   const SAVE_KEY = "helmetHeroesSave_v1";
@@ -46,14 +227,14 @@
   const boardById = (id) => BOARDS.find((b) => b.id === id) || BOARDS[0];
 
   // ---------- Avatar customization options ----------
-  const GENDERS = [{ id: "boy", label: "🧒 Boy" }, { id: "girl", label: "👧 Girl" }];
-  const RIDES = [{ id: "board", label: "🛹 Skateboard" }, { id: "scooter", label: "🛴 Scooter" }];
+  const GENDERS = [{ id: "boy", labelKey: "genderBoy" }, { id: "girl", labelKey: "genderGirl" }];
+  const RIDES = [{ id: "board", labelKey: "skateboard" }, { id: "scooter", labelKey: "scooter" }];
   const SKINS = ["#ffe0bd", "#f3c39a", "#e0ac82", "#c68642", "#8d5524", "#5c3a1e"];
   const HAIR_COLORS = ["#2b2b2b", "#5a3a2a", "#a8642a", "#e3b34d", "#d94f8a", "#5b8cff", "#e8e8e8"];
   const SHIRTS = ["#ff7a3c", "#ff8fb1", "#b58cff", "#5bd1c0", "#6fc36b", "#ffd93b", "#ff5a5a", "#4aa6f5"];
   const HAIR_STYLES = [
-    { id: "short", label: "Short" }, { id: "swoosh", label: "Swoosh" }, { id: "curly", label: "Curly" },
-    { id: "ponytail", label: "Ponytail" }, { id: "bun", label: "Bun" }, { id: "long", label: "Long" }, { id: "none", label: "Bald" },
+    { id: "short", labelKey: "hairShort" }, { id: "swoosh", labelKey: "hairSwoosh" }, { id: "curly", labelKey: "hairCurly" },
+    { id: "ponytail", labelKey: "hairPonytail" }, { id: "bun", labelKey: "hairBun" }, { id: "long", labelKey: "hairLong" }, { id: "none", labelKey: "hairBald" },
   ];
   const FACES = [{ id: "happy", label: "😊" }, { id: "grin", label: "😁" }, { id: "cool", label: "😎" }];
   function shade(hex, amt) {
@@ -88,7 +269,7 @@
   }
 
   // ---------- State machine ----------
-  const S = { TITLE: "title", HOW: "how", GEAR: "gear", PLAY: "play", LEVEL: "level", OVER: "over" };
+  const S = { TITLE: "title", HOW: "how", GEAR: "gear", PLAY: "play", LEVEL: "level", SENTHOME: "senthome", OVER: "over" };
   let state = S.TITLE;
   const overlays = {};
   document.querySelectorAll(".overlay").forEach((o) => { overlays[o.id.replace("screen-", "")] = o; });
@@ -102,7 +283,7 @@
     playControls.classList.toggle("hidden", next !== S.PLAY);
     document.getElementById("control-hint").classList.toggle("hidden", next !== S.PLAY);
     if (next === S.TITLE) {
-      document.getElementById("hi-title").textContent = save.best ? "Best score: " + save.best : "";
+      document.getElementById("hi-title").textContent = save.best ? t("bestScore", save.best) : "";
     }
   }
 
@@ -188,6 +369,21 @@
   }
   function sndSiren() { beep(700, 0.15, "sine", 0.05); }
   function sndAlert() { beep(880, 0.12, "square", 0.07); beep(660, 0.12, "square", 0.06); }
+  function sndWhoosh() { // quick rising "whoosh" as something flies through the air
+    const a = audio(); if (!a) return;
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = "sine"; o.connect(g); g.connect(a.destination);
+    const t = a.currentTime; g.gain.value = 0.05;
+    o.frequency.setValueAtTime(280, t); o.frequency.exponentialRampToValueAtTime(900, t + 0.25);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+    o.start(t); o.stop(t + 0.3);
+  }
+  function sndCrash() { // a low thud + glassy shatter
+    beep(150, 0.20, "square", 0.09);
+    beep(90, 0.30, "sawtooth", 0.08);
+    beep(1200, 0.12, "triangle", 0.04);
+    beep(1750, 0.09, "triangle", 0.03);
+  }
 
   // ============================================================
   //  GAMEPLAY
@@ -249,11 +445,11 @@
     run.skater.trickT = 0.5; run.skater.trickKind = o.type;
     if (o.type === "rail") spawnSparks(skaterPX, groundY - 10); else spawnDust(skaterPX, groundY + 2);
     if (run.helmet) run.stamina = Math.min(100, run.stamina + o.trick.staminaGain * (perfect ? 1.25 : 1));
-    addFloat((perfect ? "PERFECT! " : "") + o.trick.name + "  +" + pts, perfect ? "#ffd93b" : "#ffffff");
+    addFloat((perfect ? t("perfect") : "") + o.trick.name + "  +" + pts, perfect ? "#ffd93b" : "#ffffff");
     sndLand(perfect); if (run.combo >= 3) sndCombo(run.combo);
     // Second wind every 9 in a row
-    if (run.combo > 0 && run.combo % 9 === 0) { run.stamina = 100; setFlash("SECOND WIND! 🔋", "#1fb3a6"); }
-    else if (run.mult >= 2 && run.combo % 3 === 0) setFlash("x" + run.mult + " COMBO!", "#ffd93b");
+    if (run.combo > 0 && run.combo % 9 === 0) { run.stamina = 100; setFlash(t("secondWind"), "#1fb3a6"); }
+    else if (run.mult >= 2 && run.combo % 3 === 0) setFlash(t("comboFlash", run.mult), "#ffd93b");
     // Level up?
     if (run.landsThisLevel >= CFG.landsPerLevel) levelUp();
   }
@@ -263,14 +459,14 @@
     run.combo = 0; run.mult = 1;
     if (run.helmet) {
       run.stamina -= CFG.staminaMissHelmet;
-      addFloat("Wobble!", "#ffd93b");
+      addFloat(t("wobble"), "#ffd93b");
       run.skater.trickT = 0.25; run.skater.trickKind = "stumble";
     } else {
       run.stamina -= CFG.staminaMissNoHelmet;
       run.skater.wipeT = 1.0;
       run.shake = 0.5;
       spawnStars(skaterPX, groundY);
-      addFloat("WIPEOUT! 💫", "#ff5a3c");
+      addFloat(t("wipeout"), "#ff5a3c");
       sndWipe();
     }
     if (run.stamina <= 0) { run.stamina = 0; gameOver("wipeout"); }
@@ -280,21 +476,23 @@
     run.level++; run.landsThisLevel = 0;
     run.speed = CFG.baseSpeed * (1 + (run.level - 1) * 0.14);
     run.windowScale = Math.max(0.7, 1 - (run.level - 1) * 0.06);
-    const ti = Math.min(run.level - 1, LEVEL_TITLES.length - 1);
-    document.getElementById("level-badge").textContent = "Level " + run.level;
-    document.getElementById("level-title").textContent = LEVEL_TITLES[ti];
-    document.getElementById("level-fact").textContent = FACTS[(run.level - 2 + FACTS.length) % FACTS.length];
+    const titles = LEVEL_TITLES();
+    const ti = Math.min(run.level - 1, titles.length - 1);
+    document.getElementById("level-badge").textContent = t("level", run.level);
+    document.getElementById("level-title").textContent = titles[ti];
+    document.getElementById("level-fact").textContent = factText(FACTS[(run.level - 2 + FACTS.length) % FACTS.length]);
     showState(S.LEVEL);
   }
 
   function gameOver(kind) {
+    run.gameOverKind = kind;
     showState(S.OVER);
     playControls.classList.add("hidden");
     document.getElementById("over-emoji").textContent = kind === "grounded" ? "🛋️" : "💫";
-    document.getElementById("over-title").textContent = kind === "grounded" ? "GROUNDED!" : "Out of Stamina!";
+    document.getElementById("over-title").textContent = kind === "grounded" ? t("grounded") : t("outStamina");
     document.getElementById("over-text").textContent = kind === "grounded"
-      ? "The police skater caught you. Keep your helmet on to stay in the game!"
-      : "Your stamina ran out. Land clean tricks with your helmet on to keep it up!";
+      ? t("groundedText")
+      : t("staminaText");
     document.getElementById("final-score").textContent = run.score;
 
     const prevBest = save.best;
@@ -303,12 +501,101 @@
       // figure newly unlocked gear between prevBest and new score
       const newly = [].concat(HELMETS, BOARDS).filter((g) => g.unlockScore > prevBest && g.unlockScore <= run.score);
       save.best = run.score; persist();
-      document.getElementById("final-best").textContent = "🏆 New best!";
-      if (newly.length) unlockNote = "🔓 Unlocked: " + newly.map((g) => g.name).join(", ");
+      document.getElementById("final-best").textContent = t("newBest");
+      if (newly.length) unlockNote = t("unlocked", newly.map(itemName).join(", "));
     } else {
-      document.getElementById("final-best").textContent = "Best: " + save.best;
+      document.getElementById("final-best").textContent = t("best", save.best);
     }
     document.getElementById("unlock-note").textContent = unlockNote;
+  }
+
+  // ============================================================
+  //  "SENT HOME" CUTSCENE — Mum chucks your computer (or PS5!) out the window
+  // ============================================================
+  function startSentHome() {
+    const item = Math.random() < 0.35 ? "ps5" : "computer";
+    run.cutscene = {
+      t: 0, dur: 4.2, item,
+      winX: W * 0.80, winY: groundY - 168,
+      obj: null, crashed: false, crashT: 0,
+      debris: [], tear: 0, finished: false,
+    };
+    run.shake = 0;
+    sndWhoosh();                       // mum yanks the window open
+    showState(S.SENTHOME);
+  }
+
+  function updateSentHome(dt) {
+    const cs = run.cutscene;
+    if (!cs) return;
+    cs.t += dt;
+    if (run.shake > 0) run.shake = Math.max(0, run.shake - dt);
+    updateParticles(dt);
+
+    // Launch the gadget out of the window once Mum has wound up.
+    if (!cs.obj && cs.t >= 0.95) {
+      cs.obj = {
+        x: cs.winX, y: cs.winY + 8,
+        vx: -(W * 0.34) / 0.8, vy: -190,
+        rot: 0, vr: 5 + Math.random() * 4,
+      };
+      sndWhoosh();
+    }
+    // Fly with gravity + spin until it smashes on the pavement.
+    if (cs.obj && !cs.crashed) {
+      cs.obj.vy += 900 * dt;
+      cs.obj.x += cs.obj.vx * dt;
+      cs.obj.y += cs.obj.vy * dt;
+      cs.obj.rot += cs.obj.vr * dt;
+      if (cs.obj.y >= groundY - 6) {
+        cs.obj.y = groundY - 6;
+        cs.crashed = true; cs.crashT = cs.t;
+        run.shake = 0.9;
+        sndCrash();
+        spawnSmash(cs.obj.x, groundY - 6, cs.item);
+      }
+    }
+    // Debris bounces and settles.
+    for (const d of cs.debris) {
+      d.vy += 1100 * dt;
+      d.x += d.vx * dt; d.y += d.vy * dt; d.rot += d.vr * dt;
+      if (d.y >= groundY - 2) {
+        d.y = groundY - 2; d.vy *= -0.35; d.vx *= 0.6;
+        if (Math.abs(d.vy) < 22) d.vy = 0;
+      }
+      d.t += dt;
+    }
+    // The kid's tear wells up after the crash.
+    if (cs.crashed) cs.tear = Math.min(1, cs.tear + dt * 0.7);
+
+    if (cs.t >= cs.dur) finishSentHome();
+  }
+
+  function finishSentHome() {
+    if (!run.cutscene || run.cutscene.finished) return;
+    run.cutscene.finished = true;
+    gameOver("grounded");
+  }
+
+  function spawnSmash(x, y, item) {
+    const cs = run.cutscene;
+    const cols = item === "ps5"
+      ? ["#f4f6fb", "#e7ebf2", "#1c2230", "#2aa9ff"]
+      : ["#cfd6e0", "#9aa3b2", "#1e2a44", "#3a7bff"];
+    for (let i = 0; i < 12; i++) {
+      const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2;
+      const sp = 120 + Math.random() * 230;
+      cs.debris.push({
+        x: x + (Math.random() - 0.5) * 22, y: y,
+        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 120,
+        rot: Math.random() * 6, vr: (Math.random() - 0.5) * 16,
+        w: 5 + Math.random() * 9, h: 4 + Math.random() * 7,
+        col: cols[i % cols.length], t: 0,
+      });
+    }
+    spawnStars(x, y - 12);
+    spawnDust(x, y);
+    sndWipe();                          // the funny "wah-wah" on top of the smash
   }
 
   // ---------- Floating text + flash ----------
@@ -320,7 +607,7 @@
     const b = document.getElementById("helmet-toggle");
     if (!run) return;
     const ch = run.challenge.active;
-    b.textContent = ch ? "🪖 PUT IT ON!" : (run.helmet ? "🪖 Helmet: ON" : "😣 Helmet: OFF");
+    b.textContent = ch ? t("putItOn") : (run.helmet ? t("helmetOn") : t("helmetOff"));
     b.classList.toggle("off", !run.helmet && !ch);
     b.classList.toggle("alert", ch);
   }
@@ -329,7 +616,7 @@
     // During a "helmet flew off" challenge, pressing it = the save.
     if (run.challenge.active) { succeedChallenge(); return; }
     run.helmet = !run.helmet;
-    if (run.helmet) { run.noHelmetT = 0; if (run.cop.active) setFlash("Helmet on — escaping!", "#1fb3a6"); }
+    if (run.helmet) { run.noHelmetT = 0; if (run.cop.active) setFlash(t("escaping"), "#1fb3a6"); }
     setHelmetButton();
   }
 
@@ -341,7 +628,7 @@
     run.helmet = false;
     run.noHelmetT = 0;            // re-align the chase timer to this moment
     spawnHelmetPop();
-    setFlash("⚠️ HELMET FLEW OFF!", "#ff5a3c");
+    setFlash(t("helmetFlew"), "#ff5a3c");
     sndAlert();
     setHelmetButton();
   }
@@ -352,15 +639,15 @@
     run.challenge.active = false;
     run.helmet = true; run.noHelmetT = 0;
     run.nextChallengeT = 11 + Math.random() * 9;
-    addFloat("NICE SAVE! +" + reward + " ⚡", "#1fb3a6");
-    setFlash((frac > 0.6 ? "LIGHTNING FAST! " : "Saved! ") + "+" + reward + " energy ⚡", "#1fb3a6");
+    addFloat(t("niceSave", reward), "#1fb3a6");
+    setFlash(t("fastSave", reward, frac > 0.6), "#1fb3a6");
     sndLand(true);
     setHelmetButton();
   }
   function failChallenge() {
     run.challenge.active = false;
     run.nextChallengeT = 11 + Math.random() * 9;
-    setFlash("Too slow! Helmet still off! 😬", "#ff5a3c");
+    setFlash(t("tooSlow"), "#ff5a3c");
     sndWipe();
     setHelmetButton();
   }
@@ -376,6 +663,7 @@
   //  UPDATE
   // ============================================================
   function update(dt) {
+    if (state === S.SENTHOME) { updateSentHome(dt); return; }
     if (state !== S.PLAY || run.paused) return;
     run.cameraX += run.speed * dt;
     run.skater.bob += dt * 9;
@@ -413,17 +701,17 @@
       run.stamina -= CFG.helmetlessDrain * dt;
       if (run.stamina <= 0) { run.stamina = 0; gameOver("wipeout"); return; }
       if (!run.cop.active && run.noHelmetT >= CFG.chaseStartDelay) {
-        run.cop.active = true; run.cop.gap = W * 0.62; setFlash("🚨 Put your helmet ON!", "#ff5a3c"); sndSiren();
+        run.cop.active = true; run.cop.gap = W * CFG.chaseStartGap; setFlash(t("putHelmetOn"), "#ff5a3c"); sndSiren();
       }
     }
     if (run.cop.active) {
       if (run.helmet) {
         run.cop.gap += CFG.chaseFlee * dt;
-        if (run.cop.gap > W * 0.72) { run.cop.active = false; run.noHelmetT = 0; setFlash("ESCAPED! 🤙", "#1fb3a6"); }
+        if (run.cop.gap > W * 0.72) { run.cop.active = false; run.noHelmetT = 0; setFlash(t("escaped"), "#1fb3a6"); }
       } else {
         run.cop.gap -= CFG.chaseClose * dt;
         if (Math.floor(run.cop.gap / 60) !== Math.floor((run.cop.gap + CFG.chaseClose * dt) / 60)) sndSiren();
-        if (run.cop.gap <= 0) { gameOver("grounded"); return; }
+        if (run.cop.gap <= 0) { startSentHome(); return; }
       }
     }
 
@@ -463,6 +751,11 @@
       drawFlash();
       drawChallenge();
       if (run.paused) drawPaused();
+    } else if (run && state === S.SENTHOME) {
+      drawObstacles();
+      drawSadSkater();
+      drawSentHome(run.cutscene);
+      drawParticles();
     } else {
       // Idle skater on the title/menus background
       drawIdleSkater();
@@ -515,9 +808,9 @@
     ctx.fillStyle = "rgba(255,90,60,0.95)"; roundRect(cx - cw / 2, top, cw, 92, 16); ctx.fill();
     ctx.fillStyle = "#fff"; ctx.textAlign = "center";
     ctx.font = "800 22px Baloo 2, sans-serif";
-    ctx.fillText("⚠️ Helmet flew off!", cx, top + 30);
+    ctx.fillText(t("challengeTitle"), cx, top + 30);
     ctx.font = "800 16px Baloo 2, sans-serif";
-    ctx.fillText("Tap 🪖 (or press H) — FAST!", cx, top + 54);
+    ctx.fillText(t("challengeHint"), cx, top + 54);
     // countdown bar (green -> red), wider = more time left
     const frac = Math.max(0, run.challenge.timeLeft / run.challenge.total);
     const barW = cw - 36, bx = cx - barW / 2, byy = top + 68;
@@ -759,7 +1052,7 @@
       ctx.beginPath(); ctx.arc(x, y, ir, 0, Math.PI * 2); ctx.stroke();
       if (inWin) {
         ctx.fillStyle = "#5dff8b"; ctx.font = "800 18px Baloo 2, sans-serif"; ctx.textAlign = "center";
-        ctx.fillText("TAP!", x, y - R - 10);
+        ctx.fillText(t("tap"), x, y - R - 10);
       }
     }
   }
@@ -799,6 +1092,8 @@
     drawSkater(ctx, skaterPX + fwd, groundY - lift + bob, Object.assign({
       helmet: run.helmet, shell: run.helmetData.shell, stripe: run.helmetData.stripe,
       deck: run.boardData.deck, wheels: run.boardData.wheels, spin: spin, grind: grind,
+      // helmet OFF (but not during the brief "flew off" mini-challenge): show it in hand + a warning
+      helmetOff: !run.helmet && !run.challenge.active,
     }, avatarOpts()), groundY);
   }
   function drawIdleSkater() {
@@ -807,6 +1102,147 @@
     drawSkater(ctx, W * 0.5, groundY + Math.sin(t) * 2, Object.assign({
       helmet: true, shell: h.shell, stripe: h.stripe, deck: b.deck, wheels: b.wheels, spin: 0, grind: 0,
     }, avatarOpts()), groundY);
+  }
+
+  // The slumped, teary kid standing still during the "sent home" cutscene.
+  function drawSadSkater() {
+    const cs = run.cutscene;
+    drawSkater(ctx, skaterPX, groundY, Object.assign({
+      helmet: run.helmet, shell: run.helmetData.shell, stripe: run.helmetData.stripe,
+      deck: run.boardData.deck, wheels: run.boardData.wheels, spin: 0, grind: 0,
+      sad: true, tear: cs ? cs.tear : 0,
+    }, avatarOpts()), groundY);
+  }
+
+  // The whole cutscene overlay: house + Mum + flying gadget + debris + caption.
+  function drawSentHome(cs) {
+    if (!cs) return;
+    const c = ctx;
+    const appear = Math.min(1, cs.t / 0.45);
+    const slide = (1 - appear) * 180;
+
+    // ----- House facade sliding in on the right -----
+    const fx = W * 0.62 + slide;
+    c.save();
+    c.fillStyle = "#d8b08a"; c.fillRect(fx, -20, W - fx + 40, groundY + 20);
+    c.fillStyle = "rgba(0,0,0,0.06)";
+    for (let by = 14; by < groundY; by += 26) c.fillRect(fx, by, W - fx + 40, 2);
+    c.fillStyle = "rgba(255,255,255,0.10)"; c.fillRect(fx, -20, 6, groundY + 20);
+    c.fillStyle = "#9c5b3b"; c.fillRect(fx - 8, -20, W - fx + 48, 30);
+
+    // ----- Window -----
+    const wx = cs.winX, wy = cs.winY, ww = 100, wh = 100;
+    c.fillStyle = "#7a4a2f"; rrC(c, wx - ww / 2 - 7, wy - wh / 2 - 7, ww + 14, wh + 14, 8); c.fill();
+    c.fillStyle = "#243049"; rrC(c, wx - ww / 2, wy - wh / 2, ww, wh, 4); c.fill();
+    // open glass pane swung outward
+    c.save();
+    c.translate(wx - ww / 2, wy); c.rotate(-0.5);
+    c.fillStyle = "rgba(180,220,255,0.32)"; c.strokeStyle = "#cfe4ff"; c.lineWidth = 2;
+    rrC(c, -ww * 0.5, -wh / 2, ww * 0.5, wh, 3); c.fill(); c.stroke();
+    c.restore();
+    c.fillStyle = "#caa15f"; c.fillRect(wx - ww / 2 - 10, wy + wh / 2, ww + 20, 8);
+
+    // ----- Mum leaning out -----
+    drawMum(cs, wx, wy);
+
+    // anger marks while she winds up
+    if (!cs.crashed) {
+      c.font = "20px sans-serif"; c.textAlign = "center"; c.textBaseline = "alphabetic";
+      c.fillText("💢", wx + ww / 2 + 16, wy - wh / 2 + 8 + Math.sin(cs.t * 12) * 2);
+    }
+    c.restore();
+
+    // ----- The flying gadget -----
+    if (cs.obj && !cs.crashed) {
+      c.strokeStyle = "rgba(255,255,255,0.5)"; c.lineWidth = 3; c.lineCap = "round";
+      c.beginPath();
+      c.moveTo(cs.obj.x - cs.obj.vx * 0.04, cs.obj.y - cs.obj.vy * 0.04);
+      c.lineTo(cs.obj.x, cs.obj.y); c.stroke();
+      c.save(); c.translate(cs.obj.x, cs.obj.y); c.rotate(cs.obj.rot);
+      drawGadget(c, cs.item, 1); c.restore();
+    }
+
+    // ----- Debris on the pavement -----
+    for (const d of cs.debris) {
+      c.save(); c.translate(d.x, d.y); c.rotate(d.rot);
+      c.fillStyle = d.col; c.fillRect(-d.w / 2, -d.h / 2, d.w, d.h);
+      c.restore();
+    }
+
+    // ----- Caption + heartbreak thought bubble -----
+    if (cs.crashed) {
+      const itemName = t(cs.item === "ps5" ? "itemPs5" : "itemComputer");
+      drawCutsceneCaption(t("momThrew", itemName));
+      const bx = skaterPX + 18, by = groundY - 156;
+      c.fillStyle = "rgba(255,255,255,0.92)";
+      c.beginPath(); c.ellipse(bx, by, 24, 19, 0, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.arc(bx - 20, by + 20, 5, 0, Math.PI * 2); c.arc(bx - 28, by + 30, 3, 0, Math.PI * 2); c.fill();
+      c.font = "22px sans-serif"; c.textAlign = "center"; c.textBaseline = "middle";
+      c.fillText("💔", bx, by); c.textBaseline = "alphabetic";
+    }
+  }
+
+  // Mum in the window: angry, winding up, then shaking a fist.
+  function drawMum(cs, wx, wy) {
+    const c = ctx;
+    c.save();
+    c.translate(wx, wy + 8);
+    c.fillStyle = "#c0567a"; rrC(c, -20, 4, 40, 50, 12); c.fill();   // torso
+    c.fillStyle = "#f3c39a"; c.beginPath(); c.arc(0, -6, 13, 0, Math.PI * 2); c.fill(); // head
+    c.fillStyle = "#6b4a2f";                                          // hair + bun
+    c.beginPath(); c.arc(0, -8, 13, Math.PI, Math.PI * 2); c.fill();
+    c.beginPath(); c.arc(0, -20, 6, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = "#3a2a1a"; c.lineWidth = 2; c.lineCap = "round"; // angry brows
+    c.beginPath(); c.moveTo(-8, -9); c.lineTo(-2, -6); c.moveTo(8, -9); c.lineTo(2, -6); c.stroke();
+    c.fillStyle = "#7a2a2a"; c.beginPath(); c.ellipse(0, 1, 3.2, 2.6, 0, 0, Math.PI * 2); c.fill(); // shouting mouth
+
+    // Throwing arm — pose depends on cutscene phase.
+    let armA;
+    if (!cs.obj) armA = -2.3 + Math.sin(cs.t * 9) * 0.18;          // winding up behind
+    else if (!cs.crashed) armA = -0.5;                             // just released, swung forward
+    else armA = -1.4 + Math.sin(cs.t * 18) * 0.28;                 // shaking a fist
+    c.save();
+    c.translate(-2, 8); c.rotate(armA);
+    c.strokeStyle = "#f3c39a"; c.lineWidth = 7; c.lineCap = "round";
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(26, 0); c.stroke();
+    if (!cs.obj) { c.save(); c.translate(28, 0); c.rotate(-armA); drawGadget(c, cs.item, 0.62); c.restore(); }
+    else { c.fillStyle = "#f3c39a"; c.beginPath(); c.arc(26, 0, 5, 0, Math.PI * 2); c.fill(); }
+    c.restore();
+    c.restore();
+  }
+
+  // A computer (laptop) or a PS5 console, centred at the origin.
+  function drawGadget(c, kind, scale) {
+    scale = scale || 1;
+    c.save(); c.scale(scale, scale);
+    if (kind === "ps5") {
+      c.fillStyle = "#f4f6fb"; rrC(c, -9, -22, 18, 44, 4); c.fill();    // white shell
+      c.fillStyle = "#11151f"; c.fillRect(-3.5, -20, 7, 40);            // black core
+      c.fillStyle = "#2aa9ff"; c.fillRect(-1, -18, 2, 36);             // blue light strip
+      c.fillStyle = "rgba(255,255,255,0.5)"; c.fillRect(-9, -22, 3, 44);
+      c.strokeStyle = "rgba(0,0,0,0.15)"; c.lineWidth = 1; rrC(c, -9, -22, 18, 44, 4); c.stroke();
+    } else {
+      c.fillStyle = "#aeb6c2"; rrC(c, -20, 2, 40, 6, 2); c.fill();       // laptop base
+      c.fillStyle = "#c7cdd8"; rrC(c, -19, 3, 38, 3, 1.5); c.fill();     // keyboard deck
+      c.save(); c.translate(-18, 4); c.rotate(-0.35);                    // open lid
+      c.fillStyle = "#8b93a1"; rrC(c, 0, -30, 38, 30, 3); c.fill();
+      c.fillStyle = "#3a7bff"; rrC(c, 2, -28, 34, 26, 2); c.fill();
+      c.fillStyle = "rgba(255,255,255,0.25)"; rrC(c, 4, -26, 12, 22, 2); c.fill();
+      c.restore();
+    }
+    c.restore();
+  }
+
+  // Bottom-of-screen caption ribbon used during the cutscene.
+  function drawCutsceneCaption(msg) {
+    const c = ctx;
+    c.save();
+    c.font = "600 18px system-ui, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle";
+    const w = Math.min(W - 24, c.measureText(msg).width + 36);
+    const cx = W / 2, cy = H * 0.90;
+    c.fillStyle = "rgba(20,24,40,0.82)"; rrC(c, cx - w / 2, cy - 20, w, 40, 12); c.fill();
+    c.fillStyle = "#fff"; c.fillText(msg, cx, cy + 1);
+    c.restore();
   }
 
   // Draw the skater on context `c`. (x, y) = board contact; baseY = ground line for the shadow.
@@ -867,13 +1303,20 @@
     c.beginPath(); c.moveTo(5, -34); c.lineTo(5, -56); c.stroke();
     // Arms (skin) + short sleeves (shirt)
     c.strokeStyle = o.skin; c.lineWidth = 6; c.lineCap = "round";
-    if (scooter) {
-      c.beginPath(); c.moveTo(0, -52); c.lineTo(19, -50); c.moveTo(0, -52); c.lineTo(-14, -45); c.stroke();
+    if (o.sad) {
+      // both arms hang down, slumped and defeated
+      c.beginPath(); c.moveTo(0, -52); c.lineTo(-9, -36); c.moveTo(0, -52); c.lineTo(9, -36); c.stroke();
+      c.strokeStyle = o.shirt; c.lineWidth = 7;
+      c.beginPath(); c.moveTo(-3, -54); c.lineTo(-6, -47); c.moveTo(5, -54); c.lineTo(8, -47); c.stroke();
     } else {
-      c.beginPath(); c.moveTo(0, -52); c.lineTo(o.grind ? 26 : 19, -46); c.moveTo(0, -52); c.lineTo(-16, -44); c.stroke();
+      if (scooter) {
+        c.beginPath(); c.moveTo(0, -52); c.lineTo(19, -50); c.moveTo(0, -52); c.lineTo(-14, -45); c.stroke();
+      } else {
+        c.beginPath(); c.moveTo(0, -52); c.lineTo(o.grind ? 26 : 19, -46); c.moveTo(0, -52); c.lineTo(-16, -44); c.stroke();
+      }
+      c.strokeStyle = o.shirt; c.lineWidth = 7;
+      c.beginPath(); c.moveTo(-3, -54); c.lineTo(-8, -49); c.moveTo(5, -54); c.lineTo(10, -49); c.stroke();
     }
-    c.strokeStyle = o.shirt; c.lineWidth = 7;
-    c.beginPath(); c.moveTo(-3, -54); c.lineTo(-8, -49); c.moveTo(5, -54); c.lineTo(10, -49); c.stroke();
     // Head (skin) + ears
     c.fillStyle = o.skin; c.beginPath(); c.arc(2, -68, 11.5, 0, Math.PI * 2); c.fill();
     c.fillStyle = "rgba(0,0,0,0.06)"; c.beginPath(); c.arc(5.5, -66, 8.5, 0, Math.PI * 2); c.fill();
@@ -890,11 +1333,39 @@
       c.fillStyle = "rgba(0,0,0,0.12)"; c.fillRect(-10.5, -67.5, 25, 1.8);
     } else {
       drawSkHair(c, o);
+      if (o.helmetOff) drawHelmetOffCue(c, o);
     }
     c.restore();
   }
 
+  // Makes "helmet OFF" obvious on the avatar: the helmet is held in hand,
+  // a dashed red ring shows where it should be, and a red "!" bobs overhead.
+  function drawHelmetOffCue(c, o) {
+    const wob = Math.sin(performance.now() / 150) * 1.5;
+    // dashed red ring above the bare head — "your helmet goes here!"
+    c.save();
+    c.strokeStyle = "rgba(255,59,48,0.9)"; c.lineWidth = 2; c.setLineDash([4, 3]);
+    c.beginPath(); c.arc(2, -71, 14, Math.PI * 1.05, Math.PI * 1.95); c.stroke();
+    c.restore();
+    // the helmet, dangling from the front hand
+    c.save();
+    c.translate(o.grind ? 27 : 21, -41); c.rotate(0.3);
+    c.fillStyle = o.shell || "#3a7bff"; c.beginPath(); c.arc(0, 0, 9, Math.PI, 0); c.fill();
+    c.fillRect(-9, -1, 18, 2.6);
+    c.fillStyle = o.stripe || "#fff"; c.fillRect(-1.6, -8.5, 3.2, 8.5);
+    c.fillStyle = "rgba(255,255,255,0.28)"; c.beginPath(); c.arc(-3, -3, 3, Math.PI, Math.PI * 1.5); c.fill();
+    c.restore();
+    // bobbing red "!" warning over the head
+    c.fillStyle = "#ff3b30";
+    c.beginPath(); c.arc(2, -92 + wob, 7.5, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#fff"; c.font = "bold 11px system-ui, sans-serif";
+    c.textAlign = "center"; c.textBaseline = "middle";
+    c.fillText("!", 2, -91.5 + wob);
+    c.textAlign = "left"; c.textBaseline = "alphabetic";
+  }
+
   function drawSkFace(c, o) {
+    if (o.sad) { drawSadFace(c, o); return; }
     const cool = o.face === "cool";
     c.fillStyle = "rgba(255,130,150,0.35)";
     c.beginPath(); c.arc(-4, -62, 2.2, 0, Math.PI * 2); c.arc(8, -62, 2.2, 0, Math.PI * 2); c.fill();
@@ -921,6 +1392,34 @@
       c.beginPath(); c.arc(2.3, -61.5, 3, 0.12 * Math.PI, 0.88 * Math.PI); c.stroke();
     } else {
       c.beginPath(); c.arc(2.3, -62, 2.6, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke();
+    }
+  }
+
+  // A teary, downcast face for the "sent home" cutscene.
+  function drawSadFace(c, o) {
+    c.fillStyle = "rgba(255,130,150,0.4)";
+    c.beginPath(); c.arc(-4, -61, 2.4, 0, Math.PI * 2); c.arc(8, -61, 2.4, 0, Math.PI * 2); c.fill();
+    // downcast eyes
+    c.fillStyle = "#33271f";
+    c.beginPath(); c.arc(-1.5, -66.3, 1.5, 0, Math.PI * 2); c.arc(5.5, -66.3, 1.5, 0, Math.PI * 2); c.fill();
+    // worried brows, raised in the middle
+    c.strokeStyle = o.hairSh || "#5a4632"; c.lineWidth = 1.2; c.lineCap = "round";
+    c.beginPath();
+    c.moveTo(-4.5, -70.6); c.lineTo(0, -69); c.moveTo(8.5, -70.6); c.lineTo(4, -69); c.stroke();
+    // frown
+    c.strokeStyle = o.gender === "girl" ? "#e06b80" : "#b85c5c"; c.lineWidth = 1.6;
+    c.beginPath(); c.arc(2.3, -58, 2.6, 1.15 * Math.PI, 1.85 * Math.PI); c.stroke();
+    // a tear welling up and sliding down
+    const tr = o.tear || 0;
+    if (tr > 0.02) {
+      const ty = -64 + tr * 7;
+      c.fillStyle = "rgba(120,200,255,0.9)";
+      c.beginPath();
+      c.moveTo(-1.5, ty - 2.6);
+      c.quadraticCurveTo(-3.2, ty, -1.5, ty + 2.2);
+      c.quadraticCurveTo(0.2, ty, -1.5, ty - 2.6);
+      c.fill();
+      c.fillStyle = "rgba(255,255,255,0.7)"; c.beginPath(); c.arc(-2, ty - 0.4, 0.5, 0, Math.PI * 2); c.fill();
     }
   }
 
@@ -1006,7 +1505,7 @@
     const col = run.stamina > 50 ? "#42d66a" : run.stamina > 20 ? "#ffd93b" : "#ff5a3c";
     ctx.fillStyle = col; roundRect(bx, by, bw * frac, bh, 6); ctx.fill();
     ctx.fillStyle = "#fff"; ctx.font = "800 14px Baloo 2, sans-serif"; ctx.textAlign = "left";
-    ctx.fillText("🔋 STAMINA", bx + 6, by + bh + 16);
+    ctx.fillText(t("stamina"), bx + 6, by + bh + 16);
 
     // Score + level (right)
     ctx.textAlign = "right";
@@ -1019,7 +1518,7 @@
     if (run.combo >= 3) {
       ctx.textAlign = "center"; ctx.fillStyle = "#ffd93b";
       ctx.font = "800 22px Baloo 2, sans-serif";
-      ctx.fillText(run.combo + " combo", W / 2, by + 24);
+      ctx.fillText(t("combo", run.combo), W / 2, by + 24);
     }
   }
 
@@ -1043,9 +1542,9 @@
   function drawPaused() {
     ctx.fillStyle = "rgba(8,12,30,0.6)"; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.font = "800 34px Baloo 2, sans-serif";
-    ctx.fillText("Paused", W / 2, H / 2 - 10);
+    ctx.fillText(t("paused"), W / 2, H / 2 - 10);
     ctx.font = "600 18px Baloo 2, sans-serif";
-    ctx.fillText("Tap ⏸ to keep skating", W / 2, H / 2 + 26);
+    ctx.fillText(t("unpause"), W / 2, H / 2 + 26);
   }
 
   // ---------- helpers ----------
@@ -1100,7 +1599,7 @@
     options.forEach((o) => {
       const b = document.createElement("button");
       b.className = "gear-chip" + (save.avatar[part] === o.id ? " selected" : "");
-      b.textContent = o.label;
+      b.textContent = o.labelKey ? t(o.labelKey) : o.label;
       b.addEventListener("click", () => { save.avatar[part] = o.id; persist(); renderGear(); });
       wrap.appendChild(b);
     });
@@ -1127,7 +1626,7 @@
       chip.className = "gear-chip" + (sel ? " selected" : "") + (lock ? " locked" : "");
       const color = kind === "helmet" ? g.shell : g.deck;
       chip.innerHTML = '<span class="dot" style="background:' + color + '"></span>' +
-        g.name + (lock ? ' <span class="lock">🔒 ' + g.unlockScore + '</span>' : "");
+        itemName(g) + (lock ? ' <span class="lock">🔒 ' + g.unlockScore + '</span>' : "");
       if (!lock) chip.addEventListener("click", () => {
         if (kind === "helmet") tempHelmet = g.id; else tempBoard = g.id;
         save.helmet = tempHelmet; save.board = tempBoard; persist();
@@ -1153,6 +1652,7 @@
   //  INPUT + WIRING
   // ============================================================
   function onTap() {
+    if (state === S.SENTHOME) { if (run.cutscene && run.cutscene.crashed) finishSentHome(); return; }
     if (state === S.PLAY && run && !run.paused) resolveTap();
   }
   canvas.addEventListener("pointerdown", (e) => { onTap(); });
@@ -1176,8 +1676,68 @@
     if (t === "gear") { renderGear(); showState(S.GEAR); } else showState(S[t.toUpperCase()] || S.TITLE);
   }));
 
+  function applyLanguage() {
+    document.documentElement.lang = lang;
+    document.getElementById("control-hint").innerHTML = t("controlHint");
+    setText("#screen-title h1", "title");
+    setText("#screen-title .sub", "sub", true);
+    setText("#btn-play", "play");
+    setText("#btn-how", "how");
+    setText("#screen-title a.linkbtn", "backAll");
+    setText("#screen-how h2", "howTitle");
+    const howItems = document.querySelectorAll(".how-list li");
+    t("howItems").forEach((text, i) => { if (howItems[i]) howItems[i].innerHTML = text; });
+    setText("#screen-how .bigbtn", "gotIt");
+    setText("#screen-gear h2", "makeSkater");
+    const labels = ["hero", "ride", "skin", "hair", "hairColor", "shirt", "face", "helmet", "board"];
+    document.querySelectorAll(".gear-label").forEach((el, i) => { el.textContent = t(labels[i]); });
+    setText("#btn-start-run", "startRun");
+    setText("#btn-level-go", "keepSkating");
+    const scoreLabel = document.querySelector(".score-box div:first-child");
+    if (scoreLabel) {
+      const score = document.getElementById("final-score").textContent || "0";
+      scoreLabel.innerHTML = `${t("score")} <strong id="final-score">${score}</strong>`;
+    }
+    setText("#btn-again", "skateAgain");
+    setText("#screen-over [data-go='gear']", "changeGear");
+    setText("#screen-over a.linkbtn", "exit");
+    setText("#lang-toggle-title", "langToggle");
+    setText("#lang-toggle", "langShort");
+
+    if (save.best) document.getElementById("hi-title").textContent = t("bestScore", save.best);
+    if (run) {
+      setHelmetButton();
+      if (state === S.GEAR) renderGear();
+      if (state === S.LEVEL) {
+        const titles = LEVEL_TITLES();
+        const ti = Math.min(run.level - 1, titles.length - 1);
+        document.getElementById("level-badge").textContent = t("level", run.level);
+        document.getElementById("level-title").textContent = titles[ti];
+        document.getElementById("level-fact").textContent = factText(FACTS[(run.level - 2 + FACTS.length) % FACTS.length]);
+      }
+      if (state === S.OVER) {
+        const kind = run.gameOverKind || "wipeout";
+        document.getElementById("over-title").textContent = kind === "grounded" ? t("grounded") : t("outStamina");
+        document.getElementById("over-text").textContent = kind === "grounded" ? t("groundedText") : t("staminaText");
+        document.getElementById("final-best").textContent = run.score > save.best ? t("newBest") : t("best", save.best);
+      }
+    }
+  }
+
+  function toggleLanguage() {
+    lang = lang === "pl" ? "en" : "pl";
+    localStorage.setItem(LANG_KEY, lang);
+    applyLanguage();
+  }
+
+  ["lang-toggle", "lang-toggle-title"].forEach((id) => {
+    const b = document.getElementById(id);
+    if (b) b.addEventListener("click", toggleLanguage);
+  });
+
   // ---------- boot ----------
   resize();
+  applyLanguage();
   showState(S.TITLE);
   requestAnimationFrame(frame);
 })();
